@@ -7,6 +7,7 @@ import { ArrowRight, ArrowDown, Code2, Palette, Lightbulb, Sparkles, Star, Heart
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 import type { Project, About, SiteSettings } from "@shared/schema";
+import { SiTelegram } from "react-icons/si";
 
 export default function Landing() {
   const [secretClicks, setSecretClicks] = useState(0);
@@ -399,15 +400,14 @@ export default function Landing() {
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button 
                     size="lg" 
-                    variant="outline" 
                     asChild 
-                    className="px-8 py-6 text-base border-2"
+                    className="px-8 py-6 text-base bg-[#0088cc] hover:bg-[#0077b5] border-0 shadow-xl shadow-[#0088cc]/25"
                     data-testid="button-contact-me"
                   >
-                    <Link href="/contact">
-                      Написать мне
-                      <Mail className="ml-2 h-4 w-4" />
-                    </Link>
+                    <a href="https://t.me/filadelfi_lolz" target="_blank" rel="noopener noreferrer">
+                      Написать в Telegram
+                      <SiTelegram className="ml-2 h-4 w-4" />
+                    </a>
                   </Button>
                 </motion.div>
               </motion.div>
@@ -669,13 +669,13 @@ export default function Landing() {
                 <Button 
                   size="lg" 
                   asChild 
-                  className="px-10 py-7 text-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 border-0 shadow-xl shadow-violet-500/25"
+                  className="px-10 py-7 text-lg bg-[#0088cc] hover:bg-[#0077b5] border-0 shadow-xl shadow-[#0088cc]/25"
                   data-testid="button-contact-cta"
                 >
-                  <Link href="/contact">
-                    Написать мне
-                    <Mail className="ml-3 h-5 w-5" />
-                  </Link>
+                  <a href="https://t.me/filadelfi_lolz" target="_blank" rel="noopener noreferrer">
+                    Написать в Telegram
+                    <SiTelegram className="ml-3 h-5 w-5" />
+                  </a>
                 </Button>
               </motion.div>
             </motion.div>
@@ -698,19 +698,15 @@ export default function Landing() {
             
             <div className="flex items-center gap-4">
               <motion.a 
-                href="https://github.com" 
+                href="https://t.me/filadelfi_lolz" 
                 target="_blank" 
-                rel="noopener"
+                rel="noopener noreferrer"
                 whileHover={{ scale: 1.1, y: -2 }}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-[#0088cc] transition-colors"
+                data-testid="link-footer-telegram"
               >
-                <Github className="h-5 w-5" />
+                <SiTelegram className="h-5 w-5" />
               </motion.a>
-              <motion.div whileHover={{ scale: 1.1, y: -2 }}>
-                <Link href="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
-                  <Mail className="h-5 w-5" />
-                </Link>
-              </motion.div>
             </div>
             
             <p className="text-sm text-muted-foreground">

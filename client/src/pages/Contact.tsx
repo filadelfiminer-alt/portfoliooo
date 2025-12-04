@@ -35,6 +35,7 @@ import {
   MessageSquare,
   Loader2,
 } from "lucide-react";
+import { SiTelegram } from "react-icons/si";
 import type { About } from "@shared/schema";
 
 const contactFormSchema = z.object({
@@ -135,8 +136,25 @@ export default function ContactPage() {
               </motion.div>
               
               <h1 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">Контакты</h1>
-              <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed">
+              <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed mb-8">
                 Есть вопрос или хотите сотрудничать? Напишите мне, и я отвечу в ближайшее время.
+              </p>
+              
+              <motion.a
+                href="https://t.me/filadelfi_lolz"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-[#0088cc] text-white font-medium shadow-lg shadow-[#0088cc]/25 hover:shadow-xl hover:shadow-[#0088cc]/30 transition-all"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                data-testid="link-telegram"
+              >
+                <SiTelegram className="h-5 w-5" />
+                Написать в Telegram
+              </motion.a>
+              
+              <p className="text-muted-foreground text-sm mt-4">
+                @filadelfi_lolz
               </p>
             </div>
 
