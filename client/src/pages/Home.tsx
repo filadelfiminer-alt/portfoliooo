@@ -42,7 +42,7 @@ export default function Home() {
   }, [projects, selectedTag]);
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen relative">
       <AnimatedBackground />
 
       <motion.header 

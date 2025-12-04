@@ -66,7 +66,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-x-hidden">
+    <div className="min-h-screen relative overflow-x-hidden">
       <AnimatedBackground />
       
       {/* Secret Easter Egg */}
