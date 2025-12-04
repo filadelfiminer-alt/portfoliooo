@@ -223,37 +223,47 @@ export default function Landing() {
                 </motion.div>
               )}
 
-              {/* Greeting - Chat Bubble with Typing Effect */}
-              <div className="mb-6 h-16 flex items-center justify-center">
+              {/* Greeting - Message Style with Typing Effect */}
+              <div className="mb-6 min-h-[70px] flex items-center justify-center">
                 <AnimatePresence mode="wait">
                   {typingPhase === 1 && (
                     <motion.div 
                       key="typing"
                       initial={{ opacity: 0, scale: 0.8, y: 20 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.8, y: -10 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
                       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                      className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-card/90 backdrop-blur-xl border border-violet-500/20 shadow-lg"
+                      className="inline-flex items-center gap-3 px-5 py-4 rounded-2xl bg-card/95 backdrop-blur-xl border border-violet-500/30 shadow-xl shadow-violet-500/10"
                     >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white text-xs font-bold">
-                        F
+                      <div className="relative flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
+                          <MessageCircle className="w-5 h-5 text-white" />
+                        </div>
+                        <motion.div
+                          className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-card"
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        />
                       </div>
-                      <div className="flex items-center gap-1">
-                        <motion.div
-                          className="w-2 h-2 rounded-full bg-violet-500"
-                          animate={{ y: [0, -6, 0] }}
-                          transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
-                        />
-                        <motion.div
-                          className="w-2 h-2 rounded-full bg-violet-500"
-                          animate={{ y: [0, -6, 0] }}
-                          transition={{ duration: 0.6, repeat: Infinity, delay: 0.15 }}
-                        />
-                        <motion.div
-                          className="w-2 h-2 rounded-full bg-violet-500"
-                          animate={{ y: [0, -6, 0] }}
-                          transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }}
-                        />
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-muted-foreground mb-1">печатает...</span>
+                        <div className="flex items-center gap-1.5">
+                          <motion.div
+                            className="w-2 h-2 rounded-full bg-violet-500"
+                            animate={{ y: [0, -5, 0] }}
+                            transition={{ duration: 0.5, repeat: Infinity, delay: 0 }}
+                          />
+                          <motion.div
+                            className="w-2 h-2 rounded-full bg-violet-500"
+                            animate={{ y: [0, -5, 0] }}
+                            transition={{ duration: 0.5, repeat: Infinity, delay: 0.12 }}
+                          />
+                          <motion.div
+                            className="w-2 h-2 rounded-full bg-violet-500"
+                            animate={{ y: [0, -5, 0] }}
+                            transition={{ duration: 0.5, repeat: Infinity, delay: 0.24 }}
+                          />
+                        </div>
                       </div>
                     </motion.div>
                   )}
@@ -264,35 +274,35 @@ export default function Landing() {
                       initial={{ opacity: 0, scale: 0.8, y: 20 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                      className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 shadow-xl shadow-violet-500/30"
+                      className="inline-flex items-center gap-3 px-5 py-4 rounded-2xl bg-card/95 backdrop-blur-xl border border-violet-500/30 shadow-xl shadow-violet-500/10"
                     >
-                      <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white text-xs font-bold">
-                        F
-                      </div>
-                      <p className="font-medium text-white text-sm">
-                        Привет, я{" "}
-                        <motion.span 
-                          className="font-bold"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
+                      <div className="relative flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
+                          <MessageCircle className="w-5 h-5 text-white" />
+                        </div>
+                        <motion.div
+                          className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-card"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
                           transition={{ delay: 0.2 }}
-                        >
-                          Filadelfi
-                        </motion.span>
-                        <motion.span
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.4 }}
-                        >
-                          {" "}
-                        </motion.span>
-                      </p>
+                        />
+                      </div>
+                      <div className="flex flex-col items-start">
+                        <span className="text-[10px] text-muted-foreground mb-0.5">сейчас</span>
+                        <p className="font-medium text-foreground">
+                          Привет, я{" "}
+                          <span className="font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">
+                            Filadelfi
+                          </span>
+                        </p>
+                      </div>
                       <motion.div
                         initial={{ scale: 0, rotate: -180 }}
                         animate={{ scale: 1, rotate: 0 }}
-                        transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
+                        transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+                        className="ml-1"
                       >
-                        <Sparkles className="w-4 h-4 text-yellow-300" />
+                        <Sparkles className="w-4 h-4 text-violet-500" />
                       </motion.div>
                     </motion.div>
                   )}
