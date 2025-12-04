@@ -149,7 +149,7 @@ export function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
                 <div className="space-y-6">
                   {project.description && (
                     <div>
-                      <h4 className="font-semibold mb-2">About</h4>
+                      <h4 className="font-semibold mb-2">О проекте</h4>
                       <p className="text-muted-foreground whitespace-pre-wrap">
                         {project.description}
                       </p>
@@ -158,7 +158,7 @@ export function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
 
                   {project.technologies && project.technologies.length > 0 && (
                     <div>
-                      <h4 className="font-semibold mb-3">Technologies</h4>
+                      <h4 className="font-semibold mb-3">Технологии</h4>
                       <div className="flex flex-wrap gap-2">
                         {project.technologies.map((tech) => (
                           <Badge key={tech} variant="outline">
@@ -178,7 +178,7 @@ export function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
                           rel="noopener noreferrer"
                         >
                           <ExternalLink className="mr-2 h-4 w-4" />
-                          View Live
+                          Смотреть проект
                         </a>
                       </Button>
                     )}
@@ -190,7 +190,7 @@ export function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
                           rel="noopener noreferrer"
                         >
                           <Github className="mr-2 h-4 w-4" />
-                          View Code
+                          Исходный код
                         </a>
                       </Button>
                     )}

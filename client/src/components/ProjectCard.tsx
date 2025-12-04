@@ -37,7 +37,7 @@ export function ProjectCard({ project, onClick, index }: ProjectCardProps) {
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white opacity-0 transition-all duration-300 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0">
           <div className="flex items-center gap-2">
             <ExternalLink className="h-4 w-4" />
-            <span className="text-sm font-medium">View Project</span>
+            <span className="text-sm font-medium">Открыть проект</span>
           </div>
         </div>
       </div>

@@ -18,7 +18,7 @@ interface PDFDownloadButtonProps {
 export function PDFDownloadButton({
   projects,
   aboutContent,
-  ownerName = "Portfolio",
+  ownerName = "Портфолио",
   variant = "outline",
   size = "default",
   className,
@@ -29,8 +29,8 @@ export function PDFDownloadButton({
   const handleDownload = async () => {
     if (projects.length === 0) {
       toast({
-        title: "No projects to export",
-        description: "Add some projects first to generate a PDF.",
+        title: "Нет проектов для экспорта",
+        description: "Сначала добавьте проекты для создания PDF.",
         variant: "destructive",
       });
       return;
@@ -50,21 +50,21 @@ export function PDFDownloadButton({
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${ownerName.replace(/\s+/g, "_")}_Portfolio.pdf`;
+      link.download = `${ownerName.replace(/\s+/g, "_")}_Портфолио.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
       toast({
-        title: "PDF Generated",
-        description: "Your portfolio PDF has been downloaded.",
+        title: "PDF создан",
+        description: "Портфолио успешно загружено.",
       });
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast({
-        title: "Error",
-        description: "Failed to generate PDF. Please try again.",
+        title: "Ошибка",
+        description: "Не удалось создать PDF. Попробуйте ещё раз.",
         variant: "destructive",
       });
     } finally {
@@ -86,7 +86,7 @@ export function PDFDownloadButton({
       ) : (
         <FileDown className="h-4 w-4 mr-2" />
       )}
-      {isGenerating ? "Generating..." : "Export PDF"}
+      {isGenerating ? "Создание..." : "Скачать PDF"}
     </Button>
   );
 }

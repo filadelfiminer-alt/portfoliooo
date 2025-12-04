@@ -61,7 +61,7 @@ import {
 import type { Project, ProjectImage, About } from "@shared/schema";
 
 const projectFormSchema = z.object({
-  title: z.string().min(1, "Title is required"),
+  title: z.string().min(1, "Требуется название"),
   description: z.string().optional(),
   shortDescription: z.string().max(500).optional(),
   imageUrl: z.string().optional(),
@@ -137,7 +137,7 @@ export default function Admin() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/projects"] });
-      toast({ title: "Project created successfully" });
+      toast({ title: "Проект успешно создан" });
       setIsDialogOpen(false);
       form.reset();
       setUploadedImageUrl("");
@@ -145,16 +145,16 @@ export default function Admin() {
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Session expired",
-          description: "Please log in again.",
+          title: "Сессия истекла",
+          description: "Пожалуйста, войдите снова.",
           variant: "destructive",
         });
         window.location.href = "/api/login";
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to create project",
+        title: "Ошибка",
+        description: "Не удалось создать проект",
         variant: "destructive",
       });
     },
@@ -181,7 +181,7 @@ export default function Admin() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/projects"] });
-      toast({ title: "Project updated successfully" });
+      toast({ title: "Проект успешно обновлён" });
       setIsDialogOpen(false);
       setEditingProject(null);
       form.reset();
@@ -190,16 +190,16 @@ export default function Admin() {
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Session expired",
-          description: "Please log in again.",
+          title: "Сессия истекла",
+          description: "Пожалуйста, войдите снова.",
           variant: "destructive",
         });
         window.location.href = "/api/login";
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to update project",
+        title: "Ошибка",
+        description: "Не удалось обновить проект",
         variant: "destructive",
       });
     },
@@ -211,21 +211,21 @@ export default function Admin() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/projects"] });
-      toast({ title: "Project deleted successfully" });
+      toast({ title: "Проект успешно удалён" });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Session expired",
-          description: "Please log in again.",
+          title: "Сессия истекла",
+          description: "Пожалуйста, войдите снова.",
           variant: "destructive",
         });
         window.location.href = "/api/login";
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to delete project",
+        title: "Ошибка",
+        description: "Не удалось удалить проект",
         variant: "destructive",
       });
     },
@@ -241,16 +241,16 @@ export default function Admin() {
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Session expired",
-          description: "Please log in again.",
+          title: "Сессия истекла",
+          description: "Пожалуйста, войдите снова.",
           variant: "destructive",
         });
         window.location.href = "/api/login";
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to update project",
+        title: "Ошибка",
+        description: "Не удалось обновить проект",
         variant: "destructive",
       });
     },
@@ -262,23 +262,22 @@ export default function Admin() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/projects"] });
-      toast({ title: "Projects reordered successfully" });
+      toast({ title: "Порядок проектов изменён" });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Session expired",
-          description: "Please log in again.",
+          title: "Сессия истекла",
+          description: "Пожалуйста, войдите снова.",
           variant: "destructive",
         });
         window.location.href = "/api/login";
         return;
       }
-      // Revert local state on error
       setLocalProjects(projects);
       toast({
-        title: "Error",
-        description: "Failed to reorder projects",
+        title: "Ошибка",
+        description: "Не удалось изменить порядок проектов",
         variant: "destructive",
       });
     },
@@ -290,7 +289,6 @@ export default function Admin() {
     },
     onSuccess: async () => {
       if (editingProject) {
-        // Refetch project images
         try {
           const response = await fetch(`/api/projects/${editingProject.id}/images`);
           const images = await response.json();
@@ -299,21 +297,21 @@ export default function Admin() {
           console.error("Error fetching project images:", error);
         }
       }
-      toast({ title: "Image added successfully" });
+      toast({ title: "Изображение добавлено" });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Session expired",
-          description: "Please log in again.",
+          title: "Сессия истекла",
+          description: "Пожалуйста, войдите снова.",
           variant: "destructive",
         });
         window.location.href = "/api/login";
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to add image",
+        title: "Ошибка",
+        description: "Не удалось добавить изображение",
         variant: "destructive",
       });
     },
@@ -325,7 +323,6 @@ export default function Admin() {
     },
     onSuccess: async () => {
       if (editingProject) {
-        // Refetch project images
         try {
           const response = await fetch(`/api/projects/${editingProject.id}/images`);
           const images = await response.json();
@@ -334,21 +331,21 @@ export default function Admin() {
           console.error("Error fetching project images:", error);
         }
       }
-      toast({ title: "Image deleted successfully" });
+      toast({ title: "Изображение удалено" });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Session expired",
-          description: "Please log in again.",
+          title: "Сессия истекла",
+          description: "Пожалуйста, войдите снова.",
           variant: "destructive",
         });
         window.location.href = "/api/login";
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to delete image",
+        title: "Ошибка",
+        description: "Не удалось удалить изображение",
         variant: "destructive",
       });
     },
@@ -414,11 +411,11 @@ export default function Admin() {
         const data = await response.json();
         setUploadedImageUrl(data.objectPath);
         form.setValue("imageUrl", data.objectPath);
-        toast({ title: "Image uploaded successfully" });
+        toast({ title: "Изображение загружено" });
       } catch (error) {
         toast({
-          title: "Error",
-          description: "Failed to process uploaded image",
+          title: "Ошибка",
+          description: "Не удалось обработать изображение",
           variant: "destructive",
         });
       }
@@ -433,7 +430,6 @@ export default function Admin() {
     setProjectImages([]);
   };
 
-  // Handler for adding gallery images
   const handleGalleryUploadComplete = async (result: any) => {
     if (result.successful?.[0]?.uploadURL && editingProject) {
       try {
@@ -442,15 +438,14 @@ export default function Admin() {
         });
         const data = await response.json();
         
-        // Add the image to the project
         addProjectImageMutation.mutate({
           projectId: editingProject.id,
           imageUrl: data.objectPath,
         });
       } catch (error) {
         toast({
-          title: "Error",
-          description: "Failed to process uploaded image",
+          title: "Ошибка",
+          description: "Не удалось обработать изображение",
           variant: "destructive",
         });
       }
@@ -518,17 +513,17 @@ export default function Admin() {
             <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
               <Sparkles className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Admin Access</CardTitle>
+            <CardTitle className="text-2xl">Панель администратора</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <p className="text-muted-foreground">
-              Please sign in to access the admin panel.
+              Пожалуйста, войдите для доступа к панели администратора.
             </p>
             <Button asChild className="w-full" data-testid="button-login-admin">
-              <a href="/api/login">Sign In with Replit</a>
+              <a href="/api/login">Войти через Replit</a>
             </Button>
             <Button variant="outline" asChild className="w-full" data-testid="button-back-home">
-              <Link href="/">Back to Home</Link>
+              <Link href="/">На главную</Link>
             </Button>
           </CardContent>
         </Card>
@@ -544,14 +539,14 @@ export default function Admin() {
             <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
               <X className="h-6 w-6 text-destructive" />
             </div>
-            <CardTitle className="text-2xl">Access Denied</CardTitle>
+            <CardTitle className="text-2xl">Доступ запрещён</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <p className="text-muted-foreground">
-              You don't have admin access. Contact the site owner for permissions.
+              У вас нет прав администратора. Обратитесь к владельцу сайта.
             </p>
             <Button variant="outline" asChild className="w-full" data-testid="button-back-home-denied">
-              <Link href="/">Back to Home</Link>
+              <Link href="/">На главную</Link>
             </Button>
           </CardContent>
         </Card>
@@ -566,29 +561,29 @@ export default function Admin() {
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-primary" />
-              <span className="font-bold text-xl">Portfolio</span>
+              <span className="font-bold text-xl">Портфолио</span>
             </Link>
-            <Badge variant="secondary">Admin</Badge>
+            <Badge variant="secondary">Админ</Badge>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <ThemeToggle />
             <PDFDownloadButton
               projects={localProjects.filter(p => p.published)}
               aboutContent={aboutContent}
-              ownerName={aboutContent?.title || "Portfolio"}
+              ownerName={aboutContent?.title || "Портфолио"}
               variant="outline"
               size="sm"
             />
             <Link href="/gallery">
               <Button variant="outline" size="sm" data-testid="button-view-portfolio">
                 <Home className="h-4 w-4 mr-2" />
-                View Portfolio
+                Просмотр
               </Button>
             </Link>
             <Button variant="ghost" size="sm" asChild data-testid="button-logout-admin">
               <a href="/api/logout">
                 <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
+                Выйти
               </a>
             </Button>
           </div>
@@ -599,9 +594,9 @@ export default function Admin() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold">Manage Projects</h1>
+              <h1 className="text-3xl font-bold">Управление проектами</h1>
               <p className="text-muted-foreground mt-1">
-                Add, edit, and organize your portfolio projects
+                Добавляйте, редактируйте и упорядочивайте ваши проекты
               </p>
             </div>
             <Dialog open={isDialogOpen} onOpenChange={(open) => !open && handleDialogClose()}>
@@ -616,13 +611,13 @@ export default function Admin() {
                   data-testid="button-add-project"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Project
+                  Добавить проект
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
-                    {editingProject ? "Edit Project" : "Add New Project"}
+                    {editingProject ? "Редактировать проект" : "Добавить новый проект"}
                   </DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
@@ -632,12 +627,12 @@ export default function Admin() {
                   >
                     <div className="space-y-4">
                       <div className="flex flex-col gap-4 items-start">
-                        <Label>Project Image</Label>
+                        <Label>Изображение проекта</Label>
                         {uploadedImageUrl ? (
                           <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
                             <img
                               src={uploadedImageUrl}
-                              alt="Project preview"
+                              alt="Предпросмотр проекта"
                               className="w-full h-full object-cover"
                             />
                             <Button
@@ -666,7 +661,7 @@ export default function Admin() {
                               <div className="flex flex-col items-center gap-2">
                                 <Image className="h-8 w-8 text-muted-foreground" />
                                 <span className="text-sm text-muted-foreground">
-                                  Click to upload image
+                                  Нажмите для загрузки
                                 </span>
                               </div>
                             </ObjectUploader>
@@ -679,10 +674,10 @@ export default function Admin() {
                         name="title"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Title *</FormLabel>
+                            <FormLabel>Название *</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="Project title"
+                                placeholder="Название проекта"
                                 {...field}
                                 data-testid="input-project-title"
                               />
@@ -697,10 +692,10 @@ export default function Admin() {
                         name="shortDescription"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Short Description</FormLabel>
+                            <FormLabel>Краткое описание</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="Brief description for cards"
+                                placeholder="Краткое описание для карточек"
                                 {...field}
                                 data-testid="input-short-description"
                               />
@@ -715,10 +710,10 @@ export default function Admin() {
                         name="description"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Full Description</FormLabel>
+                            <FormLabel>Полное описание</FormLabel>
                             <FormControl>
                               <Textarea
-                                placeholder="Detailed project description"
+                                placeholder="Подробное описание проекта"
                                 rows={4}
                                 {...field}
                                 data-testid="input-description"
@@ -735,10 +730,10 @@ export default function Admin() {
                           name="category"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Category</FormLabel>
+                              <FormLabel>Категория</FormLabel>
                               <FormControl>
                                 <Input
-                                  placeholder="e.g., Web Design"
+                                  placeholder="напр., Веб-дизайн"
                                   {...field}
                                   data-testid="input-category"
                                 />
@@ -753,7 +748,7 @@ export default function Admin() {
                           name="year"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Year</FormLabel>
+                              <FormLabel>Год</FormLabel>
                               <FormControl>
                                 <Input
                                   type="number"
@@ -773,10 +768,10 @@ export default function Admin() {
                         name="tags"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Tags</FormLabel>
+                            <FormLabel>Теги</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="react, typescript, design (comma separated)"
+                                placeholder="react, typescript, дизайн (через запятую)"
                                 {...field}
                                 data-testid="input-tags"
                               />
@@ -791,10 +786,10 @@ export default function Admin() {
                         name="technologies"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Technologies</FormLabel>
+                            <FormLabel>Технологии</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="React, Node.js, PostgreSQL (comma separated)"
+                                placeholder="React, Node.js, PostgreSQL (через запятую)"
                                 {...field}
                                 data-testid="input-technologies"
                               />
@@ -809,10 +804,10 @@ export default function Admin() {
                         name="role"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Your Role</FormLabel>
+                            <FormLabel>Ваша роль</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="e.g., Lead Developer"
+                                placeholder="напр., Ведущий разработчик"
                                 {...field}
                                 data-testid="input-role"
                               />
@@ -828,7 +823,7 @@ export default function Admin() {
                           name="externalUrl"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Live URL</FormLabel>
+                              <FormLabel>Ссылка на проект</FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="https://..."
@@ -873,7 +868,7 @@ export default function Admin() {
                                   data-testid="switch-featured"
                                 />
                               </FormControl>
-                              <FormLabel className="!mt-0">Featured</FormLabel>
+                              <FormLabel className="!mt-0">Избранный</FormLabel>
                             </FormItem>
                           )}
                         />
@@ -890,7 +885,7 @@ export default function Admin() {
                                   data-testid="switch-published"
                                 />
                               </FormControl>
-                              <FormLabel className="!mt-0">Published</FormLabel>
+                              <FormLabel className="!mt-0">Опубликован</FormLabel>
                             </FormItem>
                           )}
                         />
@@ -898,13 +893,13 @@ export default function Admin() {
 
                       {editingProject && (
                         <div className="pt-4 border-t">
-                          <Label className="mb-3 block">Additional Gallery Images</Label>
+                          <Label className="mb-3 block">Дополнительные изображения</Label>
                           <div className="grid grid-cols-3 gap-3 mb-3">
                             {projectImages.map((image) => (
                               <div key={image.id} className="relative aspect-square rounded-lg overflow-hidden bg-muted group">
                                 <img
                                   src={image.imageUrl}
-                                  alt={image.caption || "Gallery image"}
+                                  alt={image.caption || "Изображение галереи"}
                                   className="w-full h-full object-cover"
                                 />
                                 <Button
@@ -931,7 +926,7 @@ export default function Admin() {
                             <div className="flex flex-col items-center gap-1">
                               <Plus className="h-5 w-5 text-muted-foreground" />
                               <span className="text-xs text-muted-foreground">
-                                Add gallery image
+                                Добавить фото
                               </span>
                             </div>
                           </ObjectUploader>
@@ -946,7 +941,7 @@ export default function Admin() {
                         onClick={handleDialogClose}
                         data-testid="button-cancel"
                       >
-                        Cancel
+                        Отмена
                       </Button>
                       <Button
                         type="submit"
@@ -959,7 +954,7 @@ export default function Admin() {
                           updateMutation.isPending) && (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         )}
-                        {editingProject ? "Update" : "Create"} Project
+                        {editingProject ? "Сохранить" : "Создать"}
                       </Button>
                     </div>
                   </form>
@@ -978,13 +973,13 @@ export default function Admin() {
                 <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
                   <Sparkles className="h-10 w-10 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">No projects yet</h3>
+                <h3 className="text-xl font-semibold mb-2">Пока нет проектов</h3>
                 <p className="text-muted-foreground mb-6">
-                  Add your first project to get started
+                  Добавьте свой первый проект
                 </p>
                 <Button onClick={() => setIsDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Project
+                  Добавить первый проект
                 </Button>
               </CardContent>
             </Card>
@@ -992,7 +987,7 @@ export default function Admin() {
             <div className="grid gap-4">
               <div className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
                 <GripVertical className="h-4 w-4" />
-                Drag to reorder projects
+                Перетащите для изменения порядка
               </div>
               {localProjects.map((project) => (
                 <Card 
@@ -1037,12 +1032,12 @@ export default function Admin() {
                           </h3>
                           {project.featured && (
                             <Badge variant="secondary" className="text-xs">
-                              Featured
+                              Избранный
                             </Badge>
                           )}
                           {!project.published && (
                             <Badge variant="outline" className="text-xs">
-                              Draft
+                              Черновик
                             </Badge>
                           )}
                         </div>
@@ -1095,20 +1090,20 @@ export default function Admin() {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Project</AlertDialogTitle>
+                              <AlertDialogTitle>Удалить проект</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to delete "{project.title}"?
-                                This action cannot be undone.
+                                Вы уверены, что хотите удалить «{project.title}»?
+                                Это действие нельзя отменить.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogCancel>Отмена</AlertDialogCancel>
                               <AlertDialogAction
                                 onClick={() => deleteMutation.mutate(project.id)}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                 data-testid={`button-confirm-delete-${project.id}`}
                               >
-                                Delete
+                                Удалить
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>

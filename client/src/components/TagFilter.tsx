@@ -16,14 +16,14 @@ export function TagFilter({ tags, selectedTag, onSelectTag }: TagFilterProps) {
     >
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground mr-2">Filter:</span>
+          <span className="text-sm font-medium text-muted-foreground mr-2">Фильтр:</span>
           <Badge
             variant={selectedTag === null ? "default" : "outline"}
             className="cursor-pointer transition-all"
             onClick={() => onSelectTag(null)}
             data-testid="button-filter-all"
           >
-            All
+            Все
           </Badge>
           {tags.map((tag) => (
             <Badge

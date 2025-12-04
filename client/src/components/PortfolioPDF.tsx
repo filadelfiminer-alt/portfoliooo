@@ -195,32 +195,41 @@ interface PortfolioPDFProps {
   ownerName?: string;
 }
 
-export function PortfolioPDF({ projects, aboutContent, ownerName = "Portfolio" }: PortfolioPDFProps) {
+export function PortfolioPDF({ projects, aboutContent, ownerName = "Портфолио" }: PortfolioPDFProps) {
   const currentYear = new Date().getFullYear();
   const featuredProjects = projects.filter((p) => p.featured);
   const otherProjects = projects.filter((p) => !p.featured);
 
+  const getProjectsWord = (count: number) => {
+    const lastDigit = count % 10;
+    const lastTwoDigits = count % 100;
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) return "проектов";
+    if (lastDigit === 1) return "проект";
+    if (lastDigit >= 2 && lastDigit <= 4) return "проекта";
+    return "проектов";
+  };
+
   return (
-    <Document title={`${ownerName} Portfolio`} author={ownerName}>
+    <Document title={`${ownerName} Портфолио`} author={ownerName}>
       <Page size="A4" style={styles.coverPage}>
         {aboutContent?.photoUrl && (
           <Image src={aboutContent.photoUrl} style={styles.coverPhoto} />
         )}
         <Text style={styles.coverName}>{aboutContent?.title || ownerName}</Text>
-        <Text style={styles.coverTitle}>Portfolio</Text>
+        <Text style={styles.coverTitle}>Портфолио</Text>
         <Text style={styles.coverSubtitle}>
-          {projects.length} Projects | {currentYear}
+          {projects.length} {getProjectsWord(projects.length)} | {currentYear}
         </Text>
       </Page>
 
       {aboutContent && aboutContent.bio && (
         <Page size="A4" style={styles.page}>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About Me</Text>
+            <Text style={styles.sectionTitle}>Обо мне</Text>
             <Text style={styles.aboutBio}>{aboutContent.bio}</Text>
           </View>
           <View style={styles.footer} fixed>
-            <Text style={styles.footerText}>{ownerName} Portfolio</Text>
+            <Text style={styles.footerText}>{ownerName} Портфолио</Text>
           </View>
         </Page>
       )}
@@ -228,7 +237,7 @@ export function PortfolioPDF({ projects, aboutContent, ownerName = "Portfolio" }
       {featuredProjects.length > 0 && (
         <Page size="A4" style={styles.page}>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Featured Projects</Text>
+            <Text style={styles.sectionTitle}>Избранные проекты</Text>
             {featuredProjects.map((project) => (
               <View key={project.id} style={styles.projectCard} wrap={false}>
                 {project.imageUrl && (
@@ -269,7 +278,7 @@ export function PortfolioPDF({ projects, aboutContent, ownerName = "Portfolio" }
                 <View style={styles.projectLinks}>
                   {project.externalUrl && (
                     <Link src={project.externalUrl} style={styles.link}>
-                      View Live
+                      Смотреть проект
                     </Link>
                   )}
                   {project.githubUrl && (
@@ -282,7 +291,7 @@ export function PortfolioPDF({ projects, aboutContent, ownerName = "Portfolio" }
             ))}
           </View>
           <View style={styles.footer} fixed>
-            <Text style={styles.footerText}>{ownerName} Portfolio</Text>
+            <Text style={styles.footerText}>{ownerName} Портфолио</Text>
           </View>
         </Page>
       )}
@@ -290,7 +299,7 @@ export function PortfolioPDF({ projects, aboutContent, ownerName = "Portfolio" }
       {otherProjects.length > 0 && (
         <Page size="A4" style={styles.page}>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>All Projects</Text>
+            <Text style={styles.sectionTitle}>Все проекты</Text>
             {otherProjects.map((project) => (
               <View key={project.id} style={styles.projectCard} wrap={false}>
                 <View style={styles.projectHeader}>
@@ -319,7 +328,7 @@ export function PortfolioPDF({ projects, aboutContent, ownerName = "Portfolio" }
                 <View style={styles.projectLinks}>
                   {project.externalUrl && (
                     <Link src={project.externalUrl} style={styles.link}>
-                      View Live
+                      Смотреть проект
                     </Link>
                   )}
                   {project.githubUrl && (
@@ -332,7 +341,7 @@ export function PortfolioPDF({ projects, aboutContent, ownerName = "Portfolio" }
             ))}
           </View>
           <View style={styles.footer} fixed>
-            <Text style={styles.footerText}>{ownerName} Portfolio</Text>
+            <Text style={styles.footerText}>{ownerName} Портфолио</Text>
           </View>
         </Page>
       )}
