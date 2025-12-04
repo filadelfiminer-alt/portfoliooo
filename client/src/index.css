@@ -435,8 +435,9 @@
 
 .animate-scroll-infinite {
   animation: scroll-infinite 30s linear infinite;
+  transition: animation-duration 0.8s ease;
 }
 
 .animate-scroll-infinite:hover {
-  animation-play-state: paused;
+  animation-duration: 120s;
 }
