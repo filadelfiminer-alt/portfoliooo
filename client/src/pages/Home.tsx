@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Sparkles, Settings, LogOut, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
-import type { Project, AboutContent } from "@shared/schema";
+import type { Project, About } from "@shared/schema";
 
 export default function Home() {
   const { user } = useAuth();
@@ -21,7 +21,7 @@ export default function Home() {
     queryKey: ["/api/projects"],
   });
 
-  const { data: aboutContent } = useQuery<AboutContent>({
+  const { data: aboutContent } = useQuery<About>({
     queryKey: ["/api/about"],
   });
 

@@ -3,12 +3,12 @@ import { pdf } from "@react-pdf/renderer";
 import { Button } from "@/components/ui/button";
 import { FileDown, Loader2 } from "lucide-react";
 import { PortfolioPDF } from "./PortfolioPDF";
-import type { Project, AboutContent } from "@shared/schema";
+import type { Project, About } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
 interface PDFDownloadButtonProps {
   projects: Project[];
-  aboutContent?: AboutContent | null;
+  aboutContent?: About | null;
   ownerName?: string;
   variant?: "default" | "outline" | "ghost" | "secondary";
   size?: "default" | "sm" | "lg" | "icon";

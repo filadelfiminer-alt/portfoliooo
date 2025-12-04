@@ -58,7 +58,7 @@ import {
   X,
   GripVertical,
 } from "lucide-react";
-import type { Project, ProjectImage, AboutContent } from "@shared/schema";
+import type { Project, ProjectImage, About } from "@shared/schema";
 
 const projectFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -94,7 +94,7 @@ export default function Admin() {
     enabled: !!user?.isAdmin,
   });
 
-  const { data: aboutContent } = useQuery<AboutContent>({
+  const { data: aboutContent } = useQuery<About>({
     queryKey: ["/api/about"],
   });
 

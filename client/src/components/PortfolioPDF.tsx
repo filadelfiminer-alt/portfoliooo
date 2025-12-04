@@ -8,7 +8,7 @@ import {
   Font,
   Link,
 } from "@react-pdf/renderer";
-import type { Project, AboutContent } from "@shared/schema";
+import type { Project, About } from "@shared/schema";
 
 Font.register({
   family: "Inter",
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
 
 interface PortfolioPDFProps {
   projects: Project[];
-  aboutContent?: AboutContent | null;
+  aboutContent?: About | null;
   ownerName?: string;
 }
 
@@ -203,8 +203,8 @@ export function PortfolioPDF({ projects, aboutContent, ownerName = "Portfolio" }
   return (
     <Document title={`${ownerName} Portfolio`} author={ownerName}>
       <Page size="A4" style={styles.coverPage}>
-        {aboutContent?.profilePhotoUrl && (
-          <Image src={aboutContent.profilePhotoUrl} style={styles.coverPhoto} />
+        {aboutContent?.photoUrl && (
+          <Image src={aboutContent.photoUrl} style={styles.coverPhoto} />
         )}
         <Text style={styles.coverName}>{aboutContent?.title || ownerName}</Text>
         <Text style={styles.coverTitle}>Portfolio</Text>
@@ -213,20 +213,15 @@ export function PortfolioPDF({ projects, aboutContent, ownerName = "Portfolio" }
         </Text>
       </Page>
 
-      {aboutContent && (
+      {aboutContent && aboutContent.bio && (
         <Page size="A4" style={styles.page}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>About Me</Text>
             <Text style={styles.aboutBio}>{aboutContent.bio}</Text>
           </View>
-          <View render={({ pageNumber, totalPages }) => (
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>{ownerName} Portfolio</Text>
-              <Text style={styles.pageNumber}>
-                {pageNumber} / {totalPages}
-              </Text>
-            </View>
-          )} fixed />
+          <View style={styles.footer} fixed>
+            <Text style={styles.footerText}>{ownerName} Portfolio</Text>
+          </View>
         </Page>
       )}
 
@@ -286,14 +281,9 @@ export function PortfolioPDF({ projects, aboutContent, ownerName = "Portfolio" }
               </View>
             ))}
           </View>
-          <View render={({ pageNumber, totalPages }) => (
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>{ownerName} Portfolio</Text>
-              <Text style={styles.pageNumber}>
-                {pageNumber} / {totalPages}
-              </Text>
-            </View>
-          )} fixed />
+          <View style={styles.footer} fixed>
+            <Text style={styles.footerText}>{ownerName} Portfolio</Text>
+          </View>
         </Page>
       )}
 
@@ -341,14 +331,9 @@ export function PortfolioPDF({ projects, aboutContent, ownerName = "Portfolio" }
               </View>
             ))}
           </View>
-          <View render={({ pageNumber, totalPages }) => (
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>{ownerName} Portfolio</Text>
-              <Text style={styles.pageNumber}>
-                {pageNumber} / {totalPages}
-              </Text>
-            </View>
-          )} fixed />
+          <View style={styles.footer} fixed>
+            <Text style={styles.footerText}>{ownerName} Portfolio</Text>
+          </View>
         </Page>
       )}
     </Document>
