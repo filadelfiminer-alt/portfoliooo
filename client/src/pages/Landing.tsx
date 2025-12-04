@@ -329,7 +329,7 @@ export default function Landing() {
                             rotate: [0, 14, -8, 14, 0]
                           }}
                           transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.8 }}
-                          className="relative z-10 text-base"
+                          className="relative z-10 text-xl"
                           style={{ 
                             transformOrigin: "70% 70%",
                             filter: "drop-shadow(0 0 3px rgba(251,191,36,0.25))" 
