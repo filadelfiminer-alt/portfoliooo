@@ -1,184 +1,338 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+
+interface Particle {
+  x: number;
+  y: number;
+  size: number;
+  delay: number;
+}
 
 export function AnimatedBackground() {
   const [mounted, setMounted] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [smoothMouse, setSmoothMouse] = useState({ x: 0.5, y: 0.5 });
+  const particlesRef = useRef<Particle[]>([]);
+  const rafRef = useRef<number>();
 
   useEffect(() => {
     setMounted(true);
     
+    // Generate random particles
+    particlesRef.current = [...Array(10)].map((_, i) => ({
+      x: 10 + Math.random() * 80,
+      y: 10 + Math.random() * 80,
+      size: 3 + Math.random() * 2,
+      delay: i * 4,
+    }));
+
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
 
-    let rafId: number;
-    let lastX = 0;
-    let lastY = 0;
-    
     const handleMouseMove = (e: MouseEvent) => {
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        const x = (e.clientX / window.innerWidth - 0.5) * 2;
-        const y = (e.clientY / window.innerHeight - 0.5) * 2;
-        lastX += (x - lastX) * 0.1;
-        lastY += (y - lastY) * 0.1;
-        setMousePos({ x: lastX, y: lastY });
-      });
+      const x = e.clientX / window.innerWidth;
+      const y = e.clientY / window.innerHeight;
+      setMousePos({ x, y });
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(rafId);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
 
+  // Smooth mouse following
+  useEffect(() => {
+    const animate = () => {
+      setSmoothMouse(prev => ({
+        x: prev.x + (mousePos.x - prev.x) * 0.08,
+        y: prev.y + (mousePos.y - prev.y) * 0.08,
+      }));
+      rafRef.current = requestAnimationFrame(animate);
+    };
+    rafRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [mousePos]);
+
   if (!mounted) return null;
+
+  const normalizedX = (smoothMouse.x - 0.5) * 2;
+  const normalizedY = (smoothMouse.y - 0.5) * 2;
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-      {/* Very soft gradient base */}
-      <div className="absolute inset-0 bg-gradient-to-br from-violet-500/[0.06] via-purple-400/[0.04] to-fuchsia-500/[0.05] dark:from-purple-900/[0.15] dark:via-violet-900/[0.12] dark:to-fuchsia-900/[0.10]" />
+      {/* Base gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-violet-50/50 to-fuchsia-50/30 dark:from-slate-950 dark:via-violet-950/50 dark:to-fuchsia-950/30" />
       
-      {/* Soft mesh - barely moves with cursor */}
+      {/* Aurora ribbon 1 */}
       <div 
-        className="mesh-bg"
+        className="aurora aurora-1"
         style={{
-          transform: `translate(${mousePos.x * 8}px, ${mousePos.y * 8}px)`
+          transform: `translate(${normalizedX * 12}px, ${normalizedY * 12}px)`
         }}
       />
       
-      {/* Soft orb 1 */}
+      {/* Aurora ribbon 2 */}
+      <div 
+        className="aurora aurora-2"
+        style={{
+          transform: `translate(${normalizedX * -10}px, ${normalizedY * -10}px)`
+        }}
+      />
+      
+      {/* Soft orbs */}
       <div 
         className="orb orb-1"
         style={{
-          transform: `translate(${mousePos.x * 10}px, ${mousePos.y * 10}px)`
+          transform: `translate(${normalizedX * 15}px, ${normalizedY * 15}px)`
         }}
       />
-      
-      {/* Soft orb 2 */}
       <div 
         className="orb orb-2"
         style={{
-          transform: `translate(${mousePos.x * -8}px, ${mousePos.y * -8}px)`
+          transform: `translate(${normalizedX * -12}px, ${normalizedY * -12}px)`
         }}
       />
-      
-      {/* Very faint line */}
       <div 
-        className="glow-line"
+        className="orb orb-3"
         style={{
-          transform: `rotate(-8deg) translate(${mousePos.x * 6}px, ${mousePos.y * 6}px)`
+          transform: `translate(${normalizedX * 10}px, ${normalizedY * 10}px)`
         }}
       />
       
-      {/* Few soft particles */}
+      {/* Glowing lines */}
+      <div 
+        className="glow-line glow-line-1"
+        style={{
+          transform: `rotate(-15deg) translate(${normalizedX * 8}px, ${normalizedY * 8}px)`
+        }}
+      />
+      <div 
+        className="glow-line glow-line-2"
+        style={{
+          transform: `rotate(12deg) translate(${normalizedX * -6}px, ${normalizedY * -6}px)`
+        }}
+      />
+      
+      {/* Floating particles */}
       <div className="particles-container">
-        {[...Array(6)].map((_, i) => (
+        {particlesRef.current.map((p, i) => (
           <div 
             key={i} 
             className="particle"
             style={{
-              left: `${15 + i * 14}%`,
-              top: `${20 + (i * 17) % 60}%`,
-              animationDelay: `${i * 8}s`,
-              width: `${3 + (i % 2)}px`,
-              height: `${3 + (i % 2)}px`,
+              left: `${p.x}%`,
+              top: `${p.y}%`,
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              animationDelay: `${p.delay}s`,
+              transform: `translate(${normalizedX * (6 + i % 4)}px, ${normalizedY * (6 + i % 4)}px)`
             }} 
           />
         ))}
       </div>
       
+      {/* Cursor spotlight */}
+      <div 
+        className="spotlight"
+        style={{
+          left: `${smoothMouse.x * 100}%`,
+          top: `${smoothMouse.y * 100}%`,
+        }}
+      />
+      
+      {/* Noise texture overlay */}
+      <div className="noise-overlay" />
+      
       <style>{`
-        .mesh-bg {
+        .aurora {
           position: absolute;
-          inset: -20%;
-          background: 
-            radial-gradient(ellipse 70% 50% at 25% 25%, rgba(124, 58, 237, 0.08), transparent 55%),
-            radial-gradient(ellipse 60% 60% at 75% 75%, rgba(192, 132, 252, 0.06), transparent 55%);
-          animation: mesh-drift 70s ease-in-out infinite;
+          filter: blur(80px);
+          opacity: 0.6;
           transition: transform 0.4s ease-out;
         }
         
-        .dark .mesh-bg {
-          background: 
-            radial-gradient(ellipse 70% 50% at 25% 25%, rgba(124, 58, 237, 0.12), transparent 55%),
-            radial-gradient(ellipse 60% 60% at 75% 75%, rgba(167, 139, 250, 0.09), transparent 55%);
+        .aurora-1 {
+          width: 120%;
+          height: 50%;
+          top: -20%;
+          left: -10%;
+          background: linear-gradient(
+            135deg,
+            rgba(124, 58, 237, 0.12) 0%,
+            rgba(167, 139, 250, 0.10) 25%,
+            rgba(192, 132, 252, 0.08) 50%,
+            rgba(232, 121, 249, 0.06) 75%,
+            transparent 100%
+          );
+          animation: aurora-flow-1 60s ease-in-out infinite;
         }
         
-        @keyframes mesh-drift {
+        .aurora-2 {
+          width: 100%;
+          height: 60%;
+          bottom: -20%;
+          right: -10%;
+          background: linear-gradient(
+            -45deg,
+            rgba(192, 132, 252, 0.10) 0%,
+            rgba(139, 92, 246, 0.08) 30%,
+            rgba(124, 58, 237, 0.06) 60%,
+            transparent 100%
+          );
+          animation: aurora-flow-2 55s ease-in-out infinite;
+        }
+        
+        .dark .aurora-1 {
+          background: linear-gradient(
+            135deg,
+            rgba(124, 58, 237, 0.18) 0%,
+            rgba(167, 139, 250, 0.14) 25%,
+            rgba(192, 132, 252, 0.10) 50%,
+            rgba(232, 121, 249, 0.08) 75%,
+            transparent 100%
+          );
+        }
+        
+        .dark .aurora-2 {
+          background: linear-gradient(
+            -45deg,
+            rgba(192, 132, 252, 0.14) 0%,
+            rgba(139, 92, 246, 0.12) 30%,
+            rgba(124, 58, 237, 0.08) 60%,
+            transparent 100%
+          );
+        }
+        
+        @keyframes aurora-flow-1 {
           0%, 100% { 
-            margin-left: 0; 
-            margin-top: 0;
+            transform: translateX(0) translateY(0) rotate(0deg);
+          }
+          25% {
+            transform: translateX(20px) translateY(15px) rotate(2deg);
           }
           50% { 
-            margin-left: 12px; 
-            margin-top: 10px;
+            transform: translateX(10px) translateY(25px) rotate(-1deg);
+          }
+          75% {
+            transform: translateX(-15px) translateY(10px) rotate(1deg);
+          }
+        }
+        
+        @keyframes aurora-flow-2 {
+          0%, 100% { 
+            transform: translateX(0) translateY(0) rotate(0deg);
+          }
+          33% {
+            transform: translateX(-18px) translateY(-12px) rotate(-2deg);
+          }
+          66% { 
+            transform: translateX(12px) translateY(-20px) rotate(1deg);
           }
         }
         
         .orb {
           position: absolute;
           border-radius: 50%;
-          filter: blur(70px);
-          pointer-events: none;
-          transition: transform 0.4s ease-out;
+          filter: blur(60px);
+          transition: transform 0.35s ease-out;
         }
         
         .orb-1 {
-          width: 400px;
-          height: 400px;
-          top: -5%;
-          left: -5%;
-          background: radial-gradient(circle, rgba(124, 58, 237, 0.10) 0%, transparent 70%);
-          animation: orb-float-1 60s ease-in-out infinite;
+          width: 380px;
+          height: 380px;
+          top: 5%;
+          left: 10%;
+          background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+          animation: orb-drift-1 65s ease-in-out infinite;
         }
         
         .orb-2 {
-          width: 350px;
-          height: 350px;
-          bottom: 0%;
-          right: -5%;
-          background: radial-gradient(circle, rgba(192, 132, 252, 0.08) 0%, transparent 70%);
-          animation: orb-float-2 65s ease-in-out infinite;
+          width: 320px;
+          height: 320px;
+          bottom: 15%;
+          right: 15%;
+          background: radial-gradient(circle, rgba(192, 132, 252, 0.10) 0%, transparent 70%);
+          animation: orb-drift-2 58s ease-in-out infinite;
         }
         
-        .dark .orb-1 { 
-          background: radial-gradient(circle, rgba(124, 58, 237, 0.14) 0%, transparent 70%);
-        }
-        .dark .orb-2 { 
-          background: radial-gradient(circle, rgba(167, 139, 250, 0.11) 0%, transparent 70%);
+        .orb-3 {
+          width: 280px;
+          height: 280px;
+          top: 50%;
+          left: 50%;
+          margin-left: -140px;
+          margin-top: -140px;
+          background: radial-gradient(circle, rgba(232, 121, 249, 0.08) 0%, transparent 70%);
+          animation: orb-drift-3 70s ease-in-out infinite;
         }
         
-        @keyframes orb-float-1 {
+        .dark .orb-1 { background: radial-gradient(circle, rgba(139, 92, 246, 0.16) 0%, transparent 70%); }
+        .dark .orb-2 { background: radial-gradient(circle, rgba(192, 132, 252, 0.14) 0%, transparent 70%); }
+        .dark .orb-3 { background: radial-gradient(circle, rgba(232, 121, 249, 0.12) 0%, transparent 70%); }
+        
+        @keyframes orb-drift-1 {
           0%, 100% { margin-left: 0; margin-top: 0; }
-          50% { margin-left: 14px; margin-top: 12px; }
+          50% { margin-left: 25px; margin-top: 20px; }
         }
         
-        @keyframes orb-float-2 {
+        @keyframes orb-drift-2 {
           0%, 100% { margin-right: 0; margin-bottom: 0; }
-          50% { margin-right: -10px; margin-bottom: -8px; }
+          50% { margin-right: -20px; margin-bottom: -15px; }
+        }
+        
+        @keyframes orb-drift-3 {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
         }
         
         .glow-line {
           position: absolute;
-          width: 30%;
-          height: 1px;
-          top: 40%;
-          left: 20%;
-          background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.12), rgba(192, 132, 252, 0.10), transparent);
-          opacity: 0.2;
+          height: 2px;
+          background: linear-gradient(90deg, 
+            transparent, 
+            rgba(139, 92, 246, 0.20), 
+            rgba(192, 132, 252, 0.25), 
+            rgba(232, 121, 249, 0.20), 
+            transparent
+          );
           transition: transform 0.4s ease-out;
-          animation: line-fade 16s ease-in-out infinite;
         }
         
         .dark .glow-line {
-          background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.18), rgba(167, 139, 250, 0.14), transparent);
-          opacity: 0.25;
+          background: linear-gradient(90deg, 
+            transparent, 
+            rgba(139, 92, 246, 0.28), 
+            rgba(192, 132, 252, 0.32), 
+            rgba(232, 121, 249, 0.28), 
+            transparent
+          );
         }
         
-        @keyframes line-fade {
-          0%, 100% { opacity: 0.15; }
-          50% { opacity: 0.28; }
+        .glow-line-1 {
+          width: 45%;
+          top: 30%;
+          left: 10%;
+          animation: line-glow-1 14s ease-in-out infinite;
+        }
+        
+        .glow-line-2 {
+          width: 35%;
+          top: 70%;
+          right: 15%;
+          animation: line-glow-2 18s ease-in-out infinite;
+        }
+        
+        @keyframes line-glow-1 {
+          0%, 100% { opacity: 0.3; width: 45%; }
+          50% { opacity: 0.7; width: 55%; }
+        }
+        
+        @keyframes line-glow-2 {
+          0%, 100% { opacity: 0.2; width: 35%; }
+          50% { opacity: 0.6; width: 42%; }
         }
         
         .particles-container {
@@ -189,30 +343,78 @@ export function AnimatedBackground() {
         .particle {
           position: absolute;
           border-radius: 50%;
-          background: rgba(124, 58, 237, 0.12);
-          animation: particle-drift 50s ease-in-out infinite;
+          background: rgba(139, 92, 246, 0.5);
+          box-shadow: 0 0 6px rgba(139, 92, 246, 0.3);
+          animation: particle-float 50s ease-in-out infinite;
+          transition: transform 0.3s ease-out;
         }
         
         .dark .particle {
-          background: rgba(167, 139, 250, 0.15);
+          background: rgba(192, 132, 252, 0.6);
+          box-shadow: 0 0 8px rgba(192, 132, 252, 0.4);
         }
         
-        @keyframes particle-drift {
+        @keyframes particle-float {
           0%, 100% { 
             transform: translate(0, 0);
-            opacity: 0.3;
+            opacity: 0.4;
+          }
+          25% {
+            transform: translate(8px, -12px);
+            opacity: 0.7;
           }
           50% { 
-            transform: translate(12px, -16px);
+            transform: translate(15px, -20px);
             opacity: 0.5;
           }
+          75% {
+            transform: translate(6px, -28px);
+            opacity: 0.6;
+          }
+        }
+        
+        .spotlight {
+          position: absolute;
+          width: 500px;
+          height: 500px;
+          margin-left: -250px;
+          margin-top: -250px;
+          background: radial-gradient(
+            circle,
+            rgba(139, 92, 246, 0.08) 0%,
+            rgba(192, 132, 252, 0.04) 30%,
+            transparent 60%
+          );
+          pointer-events: none;
+          transition: left 0.1s ease-out, top 0.1s ease-out;
+        }
+        
+        .dark .spotlight {
+          background: radial-gradient(
+            circle,
+            rgba(139, 92, 246, 0.12) 0%,
+            rgba(192, 132, 252, 0.06) 30%,
+            transparent 60%
+          );
+        }
+        
+        .noise-overlay {
+          position: absolute;
+          inset: 0;
+          opacity: 0.03;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+        
+        .dark .noise-overlay {
+          opacity: 0.05;
         }
         
         @media (prefers-reduced-motion: reduce) {
-          .mesh-bg, .orb, .glow-line, .particle {
+          .aurora, .orb, .glow-line, .particle, .spotlight {
             animation: none !important;
             transition: none !important;
           }
+          .spotlight { display: none; }
         }
       `}</style>
     </div>
