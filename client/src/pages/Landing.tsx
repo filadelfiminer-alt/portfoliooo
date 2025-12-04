@@ -11,7 +11,7 @@ import type { Project, About } from "@shared/schema";
 export default function Landing() {
   const [secretClicks, setSecretClicks] = useState(0);
   const [showSecret, setShowSecret] = useState(false);
-  const [greetingVisible, setGreetingVisible] = useState(false);
+  const [typingPhase, setTypingPhase] = useState(0); // 0: hidden, 1: typing dots, 2: message
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
@@ -65,14 +65,23 @@ export default function Landing() {
     }
   };
 
-  // Show greeting with notification effect on load
+  // Show greeting with typing animation
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setGreetingVisible(true);
-      playNotificationSound();
-    }, 600);
+    // Phase 1: Show typing indicator
+    const timer1 = setTimeout(() => {
+      setTypingPhase(1);
+    }, 500);
     
-    return () => clearTimeout(timer);
+    // Phase 2: Show message with sound
+    const timer2 = setTimeout(() => {
+      setTypingPhase(2);
+      playNotificationSound();
+    }, 2000);
+    
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
   }, []);
 
   useEffect(() => {
@@ -214,38 +223,81 @@ export default function Landing() {
                 </motion.div>
               )}
 
-              {/* Greeting - Notification Style */}
-              <AnimatePresence>
-                {greetingVisible && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -30, scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ 
-                      type: "spring", 
-                      stiffness: 300, 
-                      damping: 20 
-                    }}
-                    className="mb-6"
-                  >
-                    <div className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-card/80 backdrop-blur-xl border border-violet-500/30 shadow-lg shadow-violet-500/10">
-                      <div className="relative flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
-                        <MessageCircle className="w-4 h-4 text-white" />
+              {/* Greeting - Chat Bubble with Typing Effect */}
+              <div className="mb-6 h-16 flex items-center justify-center">
+                <AnimatePresence mode="wait">
+                  {typingPhase === 1 && (
+                    <motion.div 
+                      key="typing"
+                      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.8, y: -10 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                      className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-card/90 backdrop-blur-xl border border-violet-500/20 shadow-lg"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white text-xs font-bold">
+                        F
+                      </div>
+                      <div className="flex items-center gap-1">
                         <motion.div
-                          className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-card"
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
+                          className="w-2 h-2 rounded-full bg-violet-500"
+                          animate={{ y: [0, -6, 0] }}
+                          transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+                        />
+                        <motion.div
+                          className="w-2 h-2 rounded-full bg-violet-500"
+                          animate={{ y: [0, -6, 0] }}
+                          transition={{ duration: 0.6, repeat: Infinity, delay: 0.15 }}
+                        />
+                        <motion.div
+                          className="w-2 h-2 rounded-full bg-violet-500"
+                          animate={{ y: [0, -6, 0] }}
+                          transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }}
                         />
                       </div>
-                      <div className="flex flex-col items-start">
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">сейчас</span>
-                        <p className="font-medium text-foreground text-sm">
-                          Привет, я <span className="font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">Filadelfi</span>
-                        </p>
+                    </motion.div>
+                  )}
+                  
+                  {typingPhase === 2 && (
+                    <motion.div 
+                      key="message"
+                      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                      className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 shadow-xl shadow-violet-500/30"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white text-xs font-bold">
+                        F
                       </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                      <p className="font-medium text-white text-sm">
+                        Привет, я{" "}
+                        <motion.span 
+                          className="font-bold"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.2 }}
+                        >
+                          Filadelfi
+                        </motion.span>
+                        <motion.span
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.4 }}
+                        >
+                          {" "}
+                        </motion.span>
+                      </p>
+                      <motion.div
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
+                      >
+                        <Sparkles className="w-4 h-4 text-yellow-300" />
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* Main Heading */}
               <motion.h1 
