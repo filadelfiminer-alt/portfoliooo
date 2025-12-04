@@ -1,225 +1,231 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 export function AnimatedBackground() {
   const [mounted, setMounted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mousePos = useRef({ x: 0, y: 0 });
+  const animationRef = useRef<number>();
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    const x = (e.clientX / window.innerWidth - 0.5) * 2;
+    const y = (e.clientY / window.innerHeight - 0.5) * 2;
+    mousePos.current = { x, y };
+  }, []);
+
+  const updateParallax = useCallback(() => {
+    if (containerRef.current) {
+      const { x, y } = mousePos.current;
+      containerRef.current.style.setProperty('--mx', String(x));
+      containerRef.current.style.setProperty('--my', String(y));
+    }
+    animationRef.current = requestAnimationFrame(updateParallax);
+  }, []);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isTouchDevice = 'ontouchstart' in window;
+    
+    if (!prefersReducedMotion && !isTouchDevice) {
+      window.addEventListener('mousemove', handleMouseMove, { passive: true });
+      animationRef.current = requestAnimationFrame(updateParallax);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [handleMouseMove, updateParallax]);
 
   if (!mounted) return null;
 
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden">
-      {/* Main gradient base */}
-      <div className="absolute inset-0 bg-gradient-to-br from-violet-600/30 via-fuchsia-500/20 to-purple-600/30 dark:from-violet-900/50 dark:via-fuchsia-800/30 dark:to-purple-900/50" />
+    <div 
+      ref={containerRef}
+      className="fixed inset-0 -z-10 overflow-hidden pointer-events-none"
+      style={{ '--mx': '0', '--my': '0' } as React.CSSProperties}
+    >
+      {/* Soft gradient base */}
+      <div className="absolute inset-0 bg-gradient-to-br from-violet-200/40 via-purple-100/30 to-fuchsia-200/40 dark:from-violet-950/60 dark:via-purple-950/50 dark:to-fuchsia-950/60" />
       
-      {/* Animated mesh gradient */}
+      {/* Animated mesh gradient - follows cursor gently */}
       <div className="mesh-bg" />
       
-      {/* Large floating orbs */}
+      {/* Soft floating orbs - follow cursor with parallax */}
       <div className="orb orb-1" />
       <div className="orb orb-2" />
       <div className="orb orb-3" />
-      <div className="orb orb-4" />
-      <div className="orb orb-5" />
       
-      {/* Glowing lines */}
+      {/* Subtle glowing lines */}
       <div className="glow-line glow-line-1" />
       <div className="glow-line glow-line-2" />
-      <div className="glow-line glow-line-3" />
       
-      {/* Floating particles */}
+      {/* Gentle floating particles */}
       <div className="particles-container">
-        {[...Array(30)].map((_, i) => (
-          <div key={i} className={`particle particle-${(i % 10) + 1}`} style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 10}s`,
-            animationDuration: `${15 + Math.random() * 20}s`
+        {[...Array(15)].map((_, i) => (
+          <div key={i} className={`particle particle-${(i % 5) + 1}`} style={{
+            left: `${10 + Math.random() * 80}%`,
+            top: `${10 + Math.random() * 80}%`,
+            animationDelay: `${Math.random() * 15}s`,
+            animationDuration: `${20 + Math.random() * 15}s`
           }} />
         ))}
       </div>
-      
-      {/* Noise texture overlay */}
-      <div className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03] bg-noise" />
       
       <style>{`
         .mesh-bg {
           position: absolute;
           inset: 0;
           background: 
-            radial-gradient(ellipse 80% 50% at 20% 40%, rgba(139, 92, 246, 0.4), transparent 50%),
-            radial-gradient(ellipse 60% 60% at 80% 20%, rgba(217, 70, 239, 0.35), transparent 50%),
-            radial-gradient(ellipse 70% 70% at 50% 80%, rgba(168, 85, 247, 0.3), transparent 50%),
-            radial-gradient(ellipse 50% 80% at 90% 60%, rgba(139, 92, 246, 0.25), transparent 50%);
-          animation: mesh-shift 20s ease-in-out infinite;
+            radial-gradient(ellipse 80% 60% at 30% 30%, rgba(167, 139, 250, 0.25), transparent 60%),
+            radial-gradient(ellipse 70% 50% at 70% 70%, rgba(192, 132, 252, 0.2), transparent 60%),
+            radial-gradient(ellipse 60% 60% at 50% 50%, rgba(139, 92, 246, 0.15), transparent 60%);
+          animation: mesh-shift 30s ease-in-out infinite;
+          transform: translate(
+            calc(var(--mx, 0) * 15px),
+            calc(var(--my, 0) * 15px)
+          );
+          transition: transform 0.3s ease-out;
         }
         
         .dark .mesh-bg {
           background: 
-            radial-gradient(ellipse 80% 50% at 20% 40%, rgba(139, 92, 246, 0.5), transparent 50%),
-            radial-gradient(ellipse 60% 60% at 80% 20%, rgba(217, 70, 239, 0.45), transparent 50%),
-            radial-gradient(ellipse 70% 70% at 50% 80%, rgba(168, 85, 247, 0.4), transparent 50%),
-            radial-gradient(ellipse 50% 80% at 90% 60%, rgba(139, 92, 246, 0.35), transparent 50%);
+            radial-gradient(ellipse 80% 60% at 30% 30%, rgba(139, 92, 246, 0.35), transparent 60%),
+            radial-gradient(ellipse 70% 50% at 70% 70%, rgba(167, 139, 250, 0.25), transparent 60%),
+            radial-gradient(ellipse 60% 60% at 50% 50%, rgba(124, 58, 237, 0.2), transparent 60%);
         }
         
         @keyframes mesh-shift {
           0%, 100% { 
-            transform: translate(0, 0) rotate(0deg);
             filter: hue-rotate(0deg);
           }
-          25% { 
-            transform: translate(2%, -2%) rotate(1deg);
-            filter: hue-rotate(10deg);
-          }
           50% { 
-            transform: translate(-1%, 2%) rotate(-1deg);
-            filter: hue-rotate(-5deg);
-          }
-          75% { 
-            transform: translate(-2%, -1%) rotate(0.5deg);
-            filter: hue-rotate(5deg);
+            filter: hue-rotate(15deg);
           }
         }
         
         .orb {
           position: absolute;
           border-radius: 50%;
-          filter: blur(60px);
+          filter: blur(80px);
           will-change: transform;
           pointer-events: none;
+          transition: transform 0.4s ease-out;
         }
         
         .orb-1 {
-          width: 600px;
-          height: 600px;
-          top: -15%;
-          left: -10%;
-          background: radial-gradient(circle, rgba(139, 92, 246, 0.8) 0%, rgba(139, 92, 246, 0) 70%);
-          animation: float-1 20s ease-in-out infinite;
+          width: 500px;
+          height: 500px;
+          top: -10%;
+          left: -5%;
+          background: radial-gradient(circle, rgba(167, 139, 250, 0.35) 0%, transparent 70%);
+          animation: float-1 25s ease-in-out infinite;
+          transform: translate(
+            calc(var(--mx, 0) * 25px),
+            calc(var(--my, 0) * 25px)
+          );
         }
         
         .orb-2 {
-          width: 500px;
-          height: 500px;
-          bottom: -10%;
+          width: 400px;
+          height: 400px;
+          bottom: -5%;
           right: -5%;
-          background: radial-gradient(circle, rgba(217, 70, 239, 0.7) 0%, rgba(217, 70, 239, 0) 70%);
-          animation: float-2 25s ease-in-out infinite;
+          background: radial-gradient(circle, rgba(192, 132, 252, 0.3) 0%, transparent 70%);
+          animation: float-2 30s ease-in-out infinite;
+          transform: translate(
+            calc(var(--mx, 0) * -20px),
+            calc(var(--my, 0) * -20px)
+          );
         }
         
         .orb-3 {
-          width: 400px;
-          height: 400px;
-          top: 50%;
-          left: 40%;
-          background: radial-gradient(circle, rgba(168, 85, 247, 0.6) 0%, rgba(168, 85, 247, 0) 70%);
-          animation: float-3 18s ease-in-out infinite;
-        }
-        
-        .orb-4 {
           width: 350px;
           height: 350px;
-          top: 20%;
-          right: 15%;
-          background: radial-gradient(circle, rgba(192, 132, 252, 0.5) 0%, rgba(192, 132, 252, 0) 70%);
-          animation: float-4 22s ease-in-out infinite;
+          top: 40%;
+          left: 50%;
+          background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, transparent 70%);
+          animation: float-3 22s ease-in-out infinite;
+          transform: translate(
+            calc(-50% + var(--mx, 0) * 30px),
+            calc(-50% + var(--my, 0) * 30px)
+          );
         }
         
-        .orb-5 {
-          width: 300px;
-          height: 300px;
-          bottom: 30%;
-          left: 20%;
-          background: radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, rgba(236, 72, 153, 0) 70%);
-          animation: float-5 28s ease-in-out infinite;
+        .dark .orb-1 { 
+          background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%);
         }
-        
-        .dark .orb-1 { opacity: 0.7; }
-        .dark .orb-2 { opacity: 0.6; }
-        .dark .orb-3 { opacity: 0.5; }
-        .dark .orb-4 { opacity: 0.5; }
-        .dark .orb-5 { opacity: 0.4; }
+        .dark .orb-2 { 
+          background: radial-gradient(circle, rgba(167, 139, 250, 0.35) 0%, transparent 70%);
+        }
+        .dark .orb-3 { 
+          background: radial-gradient(circle, rgba(124, 58, 237, 0.3) 0%, transparent 70%);
+        }
         
         @keyframes float-1 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          25% { transform: translate(60px, 40px) scale(1.1); }
-          50% { transform: translate(30px, 80px) scale(0.95); }
-          75% { transform: translate(-30px, 40px) scale(1.05); }
+          0%, 100% { margin-left: 0; margin-top: 0; }
+          25% { margin-left: 30px; margin-top: 20px; }
+          50% { margin-left: 15px; margin-top: 40px; }
+          75% { margin-left: -15px; margin-top: 20px; }
         }
         
         @keyframes float-2 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(-50px, -40px) scale(1.1); }
-          66% { transform: translate(-80px, -20px) scale(0.9); }
+          0%, 100% { margin-right: 0; margin-bottom: 0; }
+          33% { margin-right: -25px; margin-bottom: -20px; }
+          66% { margin-right: -40px; margin-bottom: -10px; }
         }
         
         @keyframes float-3 {
-          0%, 100% { transform: translate(-50%, -50%) scale(1); }
-          50% { transform: translate(-40%, -60%) scale(1.2); }
-        }
-        
-        @keyframes float-4 {
-          0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
-          50% { transform: translate(-40px, 60px) scale(1.15) rotate(10deg); }
-        }
-        
-        @keyframes float-5 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(50px, -30px) scale(1.1); }
-          66% { transform: translate(-30px, -50px) scale(0.95); }
+          0%, 100% { margin-left: 0; margin-top: 0; }
+          50% { margin-left: 25px; margin-top: -30px; }
         }
         
         .glow-line {
           position: absolute;
-          height: 2px;
-          background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.8), rgba(217, 70, 239, 0.8), transparent);
-          filter: blur(1px);
-          opacity: 0.6;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.4), rgba(192, 132, 252, 0.4), transparent);
+          opacity: 0.5;
+          transition: transform 0.5s ease-out;
         }
         
         .dark .glow-line {
-          opacity: 0.8;
+          background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.5), rgba(167, 139, 250, 0.5), transparent);
+          opacity: 0.6;
         }
         
         .glow-line-1 {
-          width: 40%;
-          top: 30%;
-          left: 10%;
-          transform: rotate(-15deg);
-          animation: line-float-1 12s ease-in-out infinite;
+          width: 35%;
+          top: 35%;
+          left: 15%;
+          transform: rotate(-12deg) translate(
+            calc(var(--mx, 0) * 10px),
+            calc(var(--my, 0) * 10px)
+          );
+          animation: line-float-1 15s ease-in-out infinite;
         }
         
         .glow-line-2 {
-          width: 30%;
-          top: 60%;
-          right: 15%;
-          transform: rotate(20deg);
-          animation: line-float-2 15s ease-in-out infinite;
-        }
-        
-        .glow-line-3 {
           width: 25%;
-          bottom: 25%;
-          left: 30%;
-          transform: rotate(-5deg);
-          animation: line-float-3 18s ease-in-out infinite;
+          top: 65%;
+          right: 20%;
+          transform: rotate(15deg) translate(
+            calc(var(--mx, 0) * -8px),
+            calc(var(--my, 0) * -8px)
+          );
+          animation: line-float-2 18s ease-in-out infinite;
         }
         
         @keyframes line-float-1 {
-          0%, 100% { transform: rotate(-15deg) translateY(0); opacity: 0.6; }
-          50% { transform: rotate(-10deg) translateY(-30px); opacity: 0.9; }
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.7; }
         }
         
         @keyframes line-float-2 {
-          0%, 100% { transform: rotate(20deg) translateX(0); opacity: 0.5; }
-          50% { transform: rotate(25deg) translateX(40px); opacity: 0.8; }
-        }
-        
-        @keyframes line-float-3 {
-          0%, 100% { transform: rotate(-5deg) translate(0, 0); opacity: 0.4; }
-          50% { transform: rotate(0deg) translate(20px, -20px); opacity: 0.7; }
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.6; }
         }
         
         .particles-container {
@@ -230,47 +236,40 @@ export function AnimatedBackground() {
         
         .particle {
           position: absolute;
-          width: 4px;
-          height: 4px;
-          background: radial-gradient(circle, rgba(168, 85, 247, 0.9) 0%, rgba(168, 85, 247, 0) 70%);
+          width: 3px;
+          height: 3px;
           border-radius: 50%;
-          animation: particle-float 20s ease-in-out infinite;
+          opacity: 0.4;
+          animation: particle-float 25s ease-in-out infinite;
         }
         
-        .particle-1 { background: radial-gradient(circle, rgba(139, 92, 246, 0.9) 0%, transparent 70%); width: 6px; height: 6px; }
-        .particle-2 { background: radial-gradient(circle, rgba(217, 70, 239, 0.8) 0%, transparent 70%); width: 5px; height: 5px; }
-        .particle-3 { background: radial-gradient(circle, rgba(168, 85, 247, 0.9) 0%, transparent 70%); width: 4px; height: 4px; }
-        .particle-4 { background: radial-gradient(circle, rgba(192, 132, 252, 0.8) 0%, transparent 70%); width: 6px; height: 6px; }
-        .particle-5 { background: radial-gradient(circle, rgba(236, 72, 153, 0.7) 0%, transparent 70%); width: 5px; height: 5px; }
-        .particle-6 { background: radial-gradient(circle, rgba(139, 92, 246, 0.8) 0%, transparent 70%); width: 4px; height: 4px; }
-        .particle-7 { background: radial-gradient(circle, rgba(217, 70, 239, 0.9) 0%, transparent 70%); width: 7px; height: 7px; }
-        .particle-8 { background: radial-gradient(circle, rgba(168, 85, 247, 0.7) 0%, transparent 70%); width: 5px; height: 5px; }
-        .particle-9 { background: radial-gradient(circle, rgba(192, 132, 252, 0.9) 0%, transparent 70%); width: 4px; height: 4px; }
-        .particle-10 { background: radial-gradient(circle, rgba(236, 72, 153, 0.8) 0%, transparent 70%); width: 6px; height: 6px; }
+        .particle-1 { background: rgba(167, 139, 250, 0.6); width: 4px; height: 4px; }
+        .particle-2 { background: rgba(192, 132, 252, 0.5); }
+        .particle-3 { background: rgba(139, 92, 246, 0.6); width: 4px; height: 4px; }
+        .particle-4 { background: rgba(167, 139, 250, 0.5); }
+        .particle-5 { background: rgba(124, 58, 237, 0.4); width: 5px; height: 5px; }
+        
+        .dark .particle-1 { background: rgba(167, 139, 250, 0.5); }
+        .dark .particle-2 { background: rgba(192, 132, 252, 0.4); }
+        .dark .particle-3 { background: rgba(139, 92, 246, 0.5); }
+        .dark .particle-4 { background: rgba(167, 139, 250, 0.4); }
+        .dark .particle-5 { background: rgba(124, 58, 237, 0.5); }
         
         @keyframes particle-float {
-          0% { 
-            transform: translate(0, 0) scale(1);
-            opacity: 0;
+          0%, 100% { 
+            transform: translate(0, 0);
+            opacity: 0.3;
           }
-          10% {
-            opacity: 1;
+          25% {
+            opacity: 0.5;
           }
           50% { 
-            transform: translate(calc(var(--random-x, 50px)), calc(var(--random-y, -100px))) scale(1.5);
-            opacity: 0.8;
+            transform: translate(30px, -40px);
+            opacity: 0.4;
           }
-          90% {
-            opacity: 1;
+          75% {
+            opacity: 0.5;
           }
-          100% { 
-            transform: translate(calc(var(--random-x, 50px) * 2), calc(var(--random-y, -100px) * 2)) scale(1);
-            opacity: 0;
-          }
-        }
-        
-        .bg-noise {
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
         }
       `}</style>
     </div>
