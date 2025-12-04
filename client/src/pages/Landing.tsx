@@ -484,13 +484,23 @@ export default function Landing() {
             {publishedProjects.length > 0 ? (
               <>
                 {/* Infinite Scrolling Carousel */}
-                <div className="relative overflow-hidden py-4">
+                <div className="relative overflow-hidden py-8">
+                  {/* Soft gradient edges */}
+                  <div className="absolute left-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-r from-background via-background/80 to-transparent z-10 pointer-events-none" />
+                  <div className="absolute right-0 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-l from-background via-background/80 to-transparent z-10 pointer-events-none" />
                   
-                  {/* Scrolling track with CSS animation */}
-                  <div 
-                    className="flex gap-6 animate-scroll-infinite"
-                    style={{
-                      width: "max-content"
+                  {/* Scrolling track */}
+                  <motion.div 
+                    className="flex gap-6"
+                    style={{ width: "max-content" }}
+                    animate={{ x: ["0%", "-50%"] }}
+                    transition={{
+                      x: {
+                        duration: 40,
+                        repeat: Infinity,
+                        ease: "linear",
+                        repeatType: "loop"
+                      }
                     }}
                   >
                     {/* Duplicate projects twice for seamless loop */}
@@ -543,7 +553,7 @@ export default function Landing() {
                         </motion.div>
                       </motion.div>
                     ))}
-                  </div>
+                  </motion.div>
                 </div>
               </>
             ) : (
