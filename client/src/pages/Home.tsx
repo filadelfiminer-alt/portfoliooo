@@ -39,21 +39,29 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
-          <Link href="/">
-            <a className="flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-primary" />
-              <span className="font-bold text-xl">Portfolio</span>
-            </a>
+          <Link href="/" className="flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            <span className="font-bold text-xl">Portfolio</span>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Link href="/about">
+              <Button variant="ghost" size="sm" data-testid="button-nav-about">
+                About
+              </Button>
+            </Link>
+            <Link href="/contact">
+              <Button variant="ghost" size="sm" data-testid="button-nav-contact">
+                Contact
+              </Button>
+            </Link>
             <ThemeToggle />
             {user?.isAdmin && (
-              <Button variant="outline" size="sm" asChild data-testid="button-admin">
-                <Link href="/admin">
+              <Link href="/admin">
+                <Button variant="outline" size="sm" data-testid="button-admin">
                   <Settings className="h-4 w-4 mr-2" />
                   Manage
-                </Link>
-              </Button>
+                </Button>
+              </Link>
             )}
             <Button variant="ghost" size="sm" asChild data-testid="button-logout">
               <a href="/api/logout">

@@ -1,13 +1,22 @@
 import {
   users,
   projects,
+  aboutContent,
+  contactMessages,
+  projectImages,
   type User,
   type UpsertUser,
   type Project,
   type InsertProject,
+  type About,
+  type InsertAbout,
+  type ContactMessage,
+  type InsertContactMessage,
+  type ProjectImage,
+  type InsertProjectImage,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, asc } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -21,6 +30,22 @@ export interface IStorage {
   createProject(project: InsertProject): Promise<Project>;
   updateProject(id: string, project: Partial<InsertProject>): Promise<Project | undefined>;
   deleteProject(id: string): Promise<boolean>;
+  
+  // About content operations
+  getAboutContent(): Promise<About | undefined>;
+  upsertAboutContent(about: InsertAbout): Promise<About>;
+  
+  // Contact message operations
+  getContactMessages(): Promise<ContactMessage[]>;
+  createContactMessage(message: InsertContactMessage): Promise<ContactMessage>;
+  markMessageAsRead(id: string): Promise<ContactMessage | undefined>;
+  deleteContactMessage(id: string): Promise<boolean>;
+  
+  // Project images operations
+  getProjectImages(projectId: string): Promise<ProjectImage[]>;
+  addProjectImage(image: InsertProjectImage): Promise<ProjectImage>;
+  updateProjectImageOrder(id: string, sortOrder: number): Promise<ProjectImage | undefined>;
+  deleteProjectImage(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -92,6 +117,82 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProject(id: string): Promise<boolean> {
     const result = await db.delete(projects).where(eq(projects.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // About content operations
+  async getAboutContent(): Promise<About | undefined> {
+    const [about] = await db.select().from(aboutContent).limit(1);
+    return about;
+  }
+
+  async upsertAboutContent(about: InsertAbout): Promise<About> {
+    const existing = await this.getAboutContent();
+    if (existing) {
+      const [updated] = await db
+        .update(aboutContent)
+        .set({ ...about, updatedAt: new Date() })
+        .where(eq(aboutContent.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(aboutContent).values(about).returning();
+      return created;
+    }
+  }
+
+  // Contact message operations
+  async getContactMessages(): Promise<ContactMessage[]> {
+    return await db
+      .select()
+      .from(contactMessages)
+      .orderBy(desc(contactMessages.createdAt));
+  }
+
+  async createContactMessage(message: InsertContactMessage): Promise<ContactMessage> {
+    const [created] = await db.insert(contactMessages).values(message).returning();
+    return created;
+  }
+
+  async markMessageAsRead(id: string): Promise<ContactMessage | undefined> {
+    const [updated] = await db
+      .update(contactMessages)
+      .set({ isRead: true })
+      .where(eq(contactMessages.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteContactMessage(id: string): Promise<boolean> {
+    const result = await db.delete(contactMessages).where(eq(contactMessages.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Project images operations
+  async getProjectImages(projectId: string): Promise<ProjectImage[]> {
+    return await db
+      .select()
+      .from(projectImages)
+      .where(eq(projectImages.projectId, projectId))
+      .orderBy(asc(projectImages.sortOrder));
+  }
+
+  async addProjectImage(image: InsertProjectImage): Promise<ProjectImage> {
+    const [created] = await db.insert(projectImages).values(image).returning();
+    return created;
+  }
+
+  async updateProjectImageOrder(id: string, sortOrder: number): Promise<ProjectImage | undefined> {
+    const [updated] = await db
+      .update(projectImages)
+      .set({ sortOrder })
+      .where(eq(projectImages.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteProjectImage(id: string): Promise<boolean> {
+    const result = await db.delete(projectImages).where(eq(projectImages.id, id)).returning();
     return result.length > 0;
   }
 }

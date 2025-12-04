@@ -7,7 +7,7 @@ import {
   ObjectNotFoundError,
 } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
-import { insertProjectSchema } from "@shared/schema";
+import { insertProjectSchema, insertAboutSchema, insertContactMessageSchema, insertProjectImageSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(
@@ -205,6 +205,194 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting project:", error);
       res.status(500).json({ message: "Failed to delete project" });
+    }
+  });
+
+  // Bulk update project order
+  app.patch("/api/projects/reorder", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { projectOrders } = req.body;
+      if (!Array.isArray(projectOrders)) {
+        return res.status(400).json({ message: "projectOrders must be an array" });
+      }
+
+      for (const { id, sortOrder } of projectOrders) {
+        await storage.updateProject(id, { sortOrder });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error reordering projects:", error);
+      res.status(500).json({ message: "Failed to reorder projects" });
+    }
+  });
+
+  // About content routes - public
+  app.get("/api/about", async (req, res) => {
+    try {
+      const about = await storage.getAboutContent();
+      res.json(about || null);
+    } catch (error) {
+      console.error("Error fetching about content:", error);
+      res.status(500).json({ message: "Failed to fetch about content" });
+    }
+  });
+
+  // About content routes - admin only
+  app.put("/api/about", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const validatedData = insertAboutSchema.parse(req.body);
+      const about = await storage.upsertAboutContent(validatedData);
+      res.json(about);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating about content:", error);
+      res.status(500).json({ message: "Failed to update about content" });
+    }
+  });
+
+  // Contact message routes - public submission
+  app.post("/api/contact", async (req, res) => {
+    try {
+      const validatedData = insertContactMessageSchema.parse(req.body);
+      const message = await storage.createContactMessage(validatedData);
+      res.status(201).json({ success: true, id: message.id });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating contact message:", error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  // Contact message routes - admin only
+  app.get("/api/admin/messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const messages = await storage.getContactMessages();
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  app.patch("/api/admin/messages/:id/read", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const message = await storage.markMessageAsRead(req.params.id);
+      if (!message) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+      res.json(message);
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+      res.status(500).json({ message: "Failed to update message" });
+    }
+  });
+
+  app.delete("/api/admin/messages/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const deleted = await storage.deleteContactMessage(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      res.status(500).json({ message: "Failed to delete message" });
+    }
+  });
+
+  // Project images routes
+  app.get("/api/projects/:id/images", async (req, res) => {
+    try {
+      const images = await storage.getProjectImages(req.params.id);
+      res.json(images);
+    } catch (error) {
+      console.error("Error fetching project images:", error);
+      res.status(500).json({ message: "Failed to fetch project images" });
+    }
+  });
+
+  app.post("/api/projects/:id/images", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const validatedData = insertProjectImageSchema.parse({
+        ...req.body,
+        projectId: req.params.id,
+      });
+
+      const image = await storage.addProjectImage(validatedData);
+      res.status(201).json(image);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error adding project image:", error);
+      res.status(500).json({ message: "Failed to add project image" });
+    }
+  });
+
+  app.delete("/api/project-images/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const deleted = await storage.deleteProjectImage(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Image not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting project image:", error);
+      res.status(500).json({ message: "Failed to delete project image" });
     }
   });
 

@@ -12,7 +12,13 @@ export default function Landing() {
             <Sparkles className="h-6 w-6 text-primary" />
             <span className="font-bold text-xl">Portfolio</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button variant="ghost" size="sm" asChild data-testid="button-nav-about">
+              <a href="/about">About</a>
+            </Button>
+            <Button variant="ghost" size="sm" asChild data-testid="button-nav-contact">
+              <a href="/contact">Contact</a>
+            </Button>
             <ThemeToggle />
             <Button asChild data-testid="button-login">
               <a href="/api/login">Sign In</a>
