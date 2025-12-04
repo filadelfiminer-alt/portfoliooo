@@ -300,45 +300,114 @@ export default function Landing() {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
-                        className="ml-2 relative"
+                        className="ml-3 relative w-10 h-10 flex items-center justify-center"
                       >
-                        {/* Glowing background */}
+                        {/* Outer glow ring */}
                         <motion.div
-                          className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 blur-md"
+                          className="absolute inset-0 rounded-full"
+                          style={{
+                            background: "conic-gradient(from 0deg, #8b5cf6, #d946ef, #f59e0b, #8b5cf6)"
+                          }}
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                        />
+                        <motion.div
+                          className="absolute inset-[2px] rounded-full bg-card"
+                        />
+                        
+                        {/* Pulsing glow */}
+                        <motion.div
+                          className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-amber-400 blur-lg"
                           animate={{ 
-                            scale: [1, 1.5, 1],
-                            opacity: [0.5, 0.8, 0.5]
+                            scale: [1, 1.4, 1],
+                            opacity: [0.4, 0.7, 0.4]
                           }}
                           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                         />
-                        {/* Rotating stars container */}
+                        
+                        {/* Center star */}
                         <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                          className="relative"
-                        >
-                          <Star className="w-5 h-5 text-yellow-400 fill-yellow-400 drop-shadow-lg" />
-                        </motion.div>
-                        {/* Orbiting mini sparkles */}
-                        <motion.div
-                          className="absolute -top-1 -right-1"
                           animate={{ 
-                            scale: [0.8, 1.2, 0.8],
-                            opacity: [0.6, 1, 0.6]
+                            rotate: [0, 10, -10, 0],
+                            scale: [1, 1.1, 1]
                           }}
-                          transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                          className="relative z-10"
                         >
-                          <Sparkles className="w-2.5 h-2.5 text-fuchsia-400" />
+                          <Star className="w-5 h-5 text-amber-400 fill-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
+                        </motion.div>
+                        
+                        {/* Orbiting particles */}
+                        {[0, 60, 120, 180, 240, 300].map((angle, i) => (
+                          <motion.div
+                            key={i}
+                            className="absolute w-1.5 h-1.5 rounded-full"
+                            style={{
+                              background: i % 2 === 0 ? "#a855f7" : "#d946ef",
+                              boxShadow: i % 2 === 0 
+                                ? "0 0 6px #a855f7" 
+                                : "0 0 6px #d946ef"
+                            }}
+                            animate={{
+                              rotate: [angle, angle + 360],
+                              scale: [0.8, 1.2, 0.8]
+                            }}
+                            transition={{
+                              rotate: { duration: 3 + i * 0.5, repeat: Infinity, ease: "linear" },
+                              scale: { duration: 1 + i * 0.2, repeat: Infinity, ease: "easeInOut" }
+                            }}
+                            initial={{
+                              x: Math.cos((angle * Math.PI) / 180) * 16,
+                              y: Math.sin((angle * Math.PI) / 180) * 16
+                            }}
+                          />
+                        ))}
+                        
+                        {/* Floating sparkles */}
+                        <motion.div
+                          className="absolute -top-2 right-0"
+                          animate={{ 
+                            y: [0, -4, 0],
+                            opacity: [0.5, 1, 0.5],
+                            scale: [0.8, 1.1, 0.8]
+                          }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        >
+                          <Sparkles className="w-3 h-3 text-fuchsia-400 drop-shadow-[0_0_4px_rgba(217,70,239,0.8)]" />
                         </motion.div>
                         <motion.div
-                          className="absolute -bottom-0.5 -left-1"
+                          className="absolute -bottom-1 -left-2"
                           animate={{ 
-                            scale: [1, 0.7, 1],
-                            opacity: [0.8, 0.4, 0.8]
+                            y: [0, 3, 0],
+                            opacity: [0.6, 1, 0.6],
+                            rotate: [0, 15, 0]
                           }}
-                          transition={{ duration: 1.2, repeat: Infinity, delay: 0.5 }}
+                          transition={{ duration: 1.8, repeat: Infinity, delay: 0.3 }}
                         >
-                          <Sparkles className="w-2 h-2 text-violet-400" />
+                          <Star className="w-2.5 h-2.5 text-violet-400 fill-violet-400 drop-shadow-[0_0_4px_rgba(167,139,250,0.8)]" />
+                        </motion.div>
+                        <motion.div
+                          className="absolute top-0 -left-1"
+                          animate={{ 
+                            scale: [1, 1.3, 1],
+                            opacity: [0.4, 0.9, 0.4]
+                          }}
+                          transition={{ duration: 1.2, repeat: Infinity, delay: 0.6 }}
+                        >
+                          <Sparkles className="w-2 h-2 text-amber-300" />
+                        </motion.div>
+                        <motion.div
+                          className="absolute -bottom-2 right-1"
+                          animate={{ 
+                            rotate: [0, 360],
+                            scale: [0.9, 1.2, 0.9]
+                          }}
+                          transition={{ 
+                            rotate: { duration: 6, repeat: Infinity, ease: "linear" },
+                            scale: { duration: 2, repeat: Infinity }
+                          }}
+                        >
+                          <Star className="w-2 h-2 text-fuchsia-300 fill-fuchsia-300" />
                         </motion.div>
                       </motion.div>
                     </motion.div>
