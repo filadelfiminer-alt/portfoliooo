@@ -7,15 +7,8 @@ import { ProjectModal } from "@/components/ProjectModal";
 import { TagFilter } from "@/components/TagFilter";
 import { PDFDownloadButton } from "@/components/PDFDownloadButton";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
-import { 
-  CreativeSparkIcon, 
-  PortfolioIcon,
-  UserProfileIcon,
-  ContactEnvelopeIcon,
-  SettingsGearIcon,
-} from "@/components/CustomIcons";
 import { useAuth } from "@/hooks/useAuth";
-import { LogOut, Loader2 } from "lucide-react";
+import { LogOut, Loader2, Sparkles, Settings, User, Mail, Home as HomeIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 import type { Project, About } from "@shared/schema";
@@ -52,32 +45,43 @@ export default function Home() {
     <div className="min-h-screen bg-background relative">
       <AnimatedBackground />
 
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/70 backdrop-blur-xl border-b border-border/50">
+      <motion.header 
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-2xl border-b border-white/10"
+      >
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-3 group">
             <motion.div
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.6 }}
             >
-              <CreativeSparkIcon className="h-7 w-7 text-primary" size={28} />
+              <Sparkles className="h-7 w-7 text-violet-500" />
             </motion.div>
-            <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-              Портфолио
+            <span className="font-display font-bold text-xl tracking-tight">
+              {aboutContent?.title || "Портфолио"}
             </span>
           </Link>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Link href="/about">
-              <Button variant="ghost" size="sm" className="gap-2" data-testid="button-nav-about">
-                <UserProfileIcon size={18} animate={false} />
+          
+          <div className="flex items-center gap-1 flex-wrap">
+            <Button variant="ghost" size="sm" asChild data-testid="button-nav-home">
+              <Link href="/">
+                <HomeIcon className="h-4 w-4 mr-1.5" />
+                Главная
+              </Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild data-testid="button-nav-about">
+              <Link href="/about">
+                <User className="h-4 w-4 mr-1.5" />
                 Обо мне
-              </Button>
-            </Link>
-            <Link href="/contact">
-              <Button variant="ghost" size="sm" className="gap-2" data-testid="button-nav-contact">
-                <ContactEnvelopeIcon size={18} animate={false} />
+              </Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild data-testid="button-nav-contact">
+              <Link href="/contact">
+                <Mail className="h-4 w-4 mr-1.5" />
                 Контакты
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <PDFDownloadButton
               projects={filteredProjects}
               aboutContent={aboutContent}
@@ -87,48 +91,54 @@ export default function Home() {
             />
             <ThemeToggle />
             {user?.isAdmin && (
-              <Link href="/admin">
-                <Button variant="outline" size="sm" className="gap-2 glass-button text-primary-foreground" data-testid="button-admin">
-                  <SettingsGearIcon size={16} animate={false} />
-                  Управление
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button variant="default" size="sm" asChild className="ml-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 border-0" data-testid="button-admin">
+                  <Link href="/admin">
+                    <Settings className="h-4 w-4 mr-1.5" />
+                    Управление
+                  </Link>
                 </Button>
-              </Link>
+              </motion.div>
             )}
-            <Button variant="ghost" size="sm" asChild className="gap-2" data-testid="button-logout">
+            <Button variant="ghost" size="sm" asChild data-testid="button-logout">
               <a href="/api/logout">
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-4 w-4 mr-1.5" />
                 Выйти
               </a>
             </Button>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       <main className="pt-16 relative z-10">
-        <section className="py-20 md:py-32">
+        {/* Hero */}
+        <section className="py-16 md:py-24">
           <div className="container mx-auto px-4">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
+              transition={{ duration: 0.6 }}
               className="max-w-4xl"
             >
-              <motion.div
+              <motion.span
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6"
+                transition={{ delay: 0.1 }}
+                className="inline-block px-4 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-500 dark:text-violet-400 text-sm font-medium mb-6"
               >
-                <PortfolioIcon size={20} className="text-primary" />
-                <span className="text-sm font-medium text-primary">Творческие работы</span>
-              </motion.div>
+                Галерея работ
+              </motion.span>
               
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-                <span className="gradient-text">Мои работы</span>
+              <h1 
+                className="font-display text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6 leading-tight"
+              >
+                <span className="bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent">
+                  Мои проекты
+                </span>
               </h1>
-              <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl leading-relaxed">
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed">
                 Коллекция моих творческих проектов и профессиональных работ. 
-                Каждый проект — это уникальная история и новый опыт.
+                Каждый проект — это уникальная история.
               </p>
             </motion.div>
           </div>
@@ -150,7 +160,7 @@ export default function Home() {
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 >
-                  <Loader2 className="h-10 w-10 text-primary" />
+                  <Loader2 className="h-10 w-10 text-violet-500" />
                 </motion.div>
               </div>
             ) : filteredProjects.length === 0 ? (
@@ -160,22 +170,26 @@ export default function Home() {
                 className="text-center py-20"
               >
                 <motion.div 
-                  className="w-24 h-24 mx-auto mb-8 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center pulse-glow"
+                  className="w-28 h-28 mx-auto mb-8 rounded-full bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center"
                   animate={{ scale: [1, 1.05, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  <CreativeSparkIcon className="h-12 w-12 text-primary" size={48} />
+                  <Sparkles className="h-14 w-14 text-violet-500" />
                 </motion.div>
-                <h3 className="text-2xl font-bold mb-3">Проектов пока нет</h3>
+                <h3 className="font-display text-2xl font-bold mb-3">
+                  Проектов пока нет
+                </h3>
                 <p className="text-muted-foreground mb-8 text-lg">
                   {user?.isAdmin
                     ? "Добавьте свой первый проект"
-                    : "Скоро здесь появятся удивительные работы"}
+                    : "Скоро здесь появятся работы"}
                 </p>
                 {user?.isAdmin && (
-                  <Button asChild size="lg" className="glass-button text-primary-foreground" data-testid="button-add-first-project">
-                    <Link href="/admin">Добавить проект</Link>
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button asChild size="lg" className="bg-gradient-to-r from-violet-600 to-fuchsia-600 border-0" data-testid="button-add-first-project">
+                      <Link href="/admin">Добавить проект</Link>
+                    </Button>
+                  </motion.div>
                 )}
               </motion.div>
             ) : (
@@ -186,7 +200,7 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.4 }}
-                  className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+                  className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
                 >
                   {filteredProjects.map((project, index) => (
                     <ProjectCard
@@ -209,7 +223,7 @@ export default function Home() {
         onClose={() => setSelectedProject(null)}
       />
 
-      <footer className="border-t border-border/50 py-10 mt-12 bg-background/50 backdrop-blur-sm relative z-10">
+      <footer className="border-t border-white/5 py-10 mt-12 bg-background/50 backdrop-blur-sm relative z-10">
         <div className="container mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0 }}
@@ -217,8 +231,8 @@ export default function Home() {
             transition={{ delay: 0.5 }}
             className="flex items-center justify-center gap-2 text-muted-foreground"
           >
-            <CreativeSparkIcon size={20} className="text-primary" />
-            <span className="font-medium">Творческое Портфолио</span>
+            <Sparkles className="h-5 w-5 text-violet-500" />
+            <span className="font-medium">{aboutContent?.title || "Творческое Портфолио"}</span>
           </motion.div>
         </div>
       </footer>

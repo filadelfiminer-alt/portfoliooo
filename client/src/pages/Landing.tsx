@@ -1,43 +1,34 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
-import { ArrowRight, Sparkles, Code2, Palette, Rocket, Zap, Star, Heart } from "lucide-react";
+import { ArrowRight, ArrowDown, Code2, Palette, Lightbulb, Sparkles, Star, Heart, ExternalLink, Github, Mail } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
-
-const skills = [
-  { icon: Code2, label: "Код", color: "from-violet-500 to-purple-600" },
-  { icon: Palette, label: "Дизайн", color: "from-pink-500 to-rose-600" },
-  { icon: Rocket, label: "Скорость", color: "from-cyan-500 to-blue-600" },
-  { icon: Zap, label: "Энергия", color: "from-amber-500 to-orange-600" },
-];
-
-const features = [
-  { title: "Магия анимаций", desc: "Каждый элемент оживает" },
-  { title: "Уникальный стиль", desc: "Не как у всех" },
-  { title: "Внимание к деталям", desc: "Каждый пиксель важен" },
-];
+import { Link } from "wouter";
+import type { Project, About } from "@shared/schema";
 
 export default function Landing() {
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [secretClicks, setSecretClicks] = useState(0);
   const [showSecret, setShowSecret] = useState(false);
   const { scrollYProgress } = useScroll();
-  const heroY = useTransform(scrollYProgress, [0, 0.3], [0, -100]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
+  const { data: projects = [] } = useQuery<Project[]>({
+    queryKey: ["/api/projects"],
+  });
+
+  const { data: aboutContent } = useQuery<About>({
+    queryKey: ["/api/about"],
+  });
+
+  const publishedProjects = projects.filter(p => p.published).slice(0, 6);
 
   useEffect(() => {
     if (secretClicks >= 7) {
       setShowSecret(true);
-      setTimeout(() => setShowSecret(false), 3000);
+      setTimeout(() => setShowSecret(false), 4000);
       setSecretClicks(0);
     }
   }, [secretClicks]);
@@ -46,65 +37,52 @@ export default function Landing() {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.15, delayChildren: 0.3 }
+      transition: { staggerChildren: 0.1, delayChildren: 0.2 }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 60, rotateX: -15 },
+    hidden: { opacity: 0, y: 40 },
     visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { type: "spring", stiffness: 100, damping: 15 }
+    }
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 60, rotateX: -10 },
+    visible: (i: number) => ({ 
       opacity: 1, 
       y: 0, 
       rotateX: 0,
-      transition: { type: "spring", stiffness: 100, damping: 12 }
-    }
-  };
-
-  const flyInLeft = {
-    hidden: { opacity: 0, x: -200, rotate: -10 },
-    visible: { 
-      opacity: 1, 
-      x: 0, 
-      rotate: 0,
-      transition: { type: "spring", stiffness: 60, damping: 15 }
-    }
-  };
-
-  const flyInRight = {
-    hidden: { opacity: 0, x: 200, rotate: 10 },
-    visible: { 
-      opacity: 1, 
-      x: 0, 
-      rotate: 0,
-      transition: { type: "spring", stiffness: 60, damping: 15 }
-    }
-  };
-
-  const scaleIn = {
-    hidden: { opacity: 0, scale: 0.3 },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      transition: { type: "spring", stiffness: 200, damping: 20 }
-    }
+      transition: { 
+        type: "spring", 
+        stiffness: 80, 
+        damping: 15,
+        delay: i * 0.1
+      }
+    })
   };
 
   return (
     <div className="min-h-screen bg-background relative overflow-x-hidden">
       <AnimatedBackground />
       
-      {/* Secret Easter Egg Toast */}
+      {/* Secret Easter Egg */}
       {showSecret && (
         <motion.div
-          initial={{ opacity: 0, y: 100, scale: 0.5 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -50 }}
-          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-2xl"
+          initial={{ opacity: 0, y: 100, scale: 0.5, rotate: -10 }}
+          animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
+          exit={{ opacity: 0, scale: 0 }}
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] px-8 py-5 rounded-3xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 text-white shadow-2xl shadow-violet-500/50"
         >
-          <div className="flex items-center gap-3">
-            <Star className="h-6 w-6 animate-spin" />
-            <span className="font-bold">Вы нашли секрет! Вы особенный!</span>
-            <Heart className="h-6 w-6 text-pink-300" />
+          <div className="flex items-center gap-4">
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
+              <Star className="h-7 w-7" />
+            </motion.div>
+            <span className="font-bold text-lg">Ты нашёл секрет! Ты особенный!</span>
+            <Heart className="h-6 w-6 text-pink-200 animate-pulse" />
           </div>
         </motion.div>
       )}
@@ -113,330 +91,353 @@ export default function Landing() {
       <motion.header 
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 100, delay: 0.1 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-background/40 backdrop-blur-2xl border-b border-white/10"
+        transition={{ type: "spring", stiffness: 100 }}
+        className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-2xl border-b border-white/10"
       >
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
           <motion.div 
-            className="flex items-center gap-2 cursor-pointer"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-3 cursor-pointer select-none"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setSecretClicks(prev => prev + 1)}
           >
             <motion.div
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             >
               <Sparkles className="h-7 w-7 text-violet-500" />
             </motion.div>
-            <span className="font-bold text-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">
-              Портфолио
+            <span className="font-display font-bold text-xl tracking-tight">
+              {aboutContent?.title || "Портфолио"}
             </span>
           </motion.div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <Button variant="ghost" size="sm" asChild className="hover:bg-violet-500/10" data-testid="button-nav-about">
-              <a href="/about">Обо мне</a>
+          
+          <nav className="flex items-center gap-1 flex-wrap">
+            <Button variant="ghost" size="sm" asChild data-testid="button-nav-works">
+              <a href="#works">Работы</a>
             </Button>
-            <Button variant="ghost" size="sm" asChild className="hover:bg-fuchsia-500/10" data-testid="button-nav-contact">
-              <a href="/contact">Контакты</a>
+            <Button variant="ghost" size="sm" asChild data-testid="button-nav-about">
+              <Link href="/about">Обо мне</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild data-testid="button-nav-contact">
+              <Link href="/contact">Контакты</Link>
             </Button>
             <ThemeToggle />
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button asChild className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 border-0" data-testid="button-login">
+              <Button size="sm" asChild className="ml-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 border-0" data-testid="button-login">
                 <a href="/api/login">Войти</a>
               </Button>
             </motion.div>
-          </div>
+          </nav>
         </div>
       </motion.header>
 
       <main className="relative z-10">
         {/* Hero Section */}
         <motion.section 
-          style={{ y: heroY, opacity: heroOpacity }}
-          className="min-h-screen flex items-center justify-center pt-16 relative"
+          style={{ opacity: heroOpacity, scale: heroScale }}
+          className="min-h-screen flex items-center justify-center pt-16 relative px-4"
         >
-          {/* Floating decorative elements */}
-          <motion.div
-            className="absolute top-1/4 left-10 w-20 h-20 rounded-full bg-gradient-to-br from-violet-500/30 to-transparent blur-xl"
-            animate={{ 
-              y: [0, -30, 0],
-              scale: [1, 1.2, 1],
-              rotate: [0, 180, 360]
-            }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute bottom-1/3 right-20 w-32 h-32 rounded-full bg-gradient-to-br from-fuchsia-500/20 to-transparent blur-xl"
-            animate={{ 
-              y: [0, 40, 0],
-              x: [0, -20, 0],
-              scale: [1, 0.8, 1]
-            }}
-            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          />
-
-          <div className="container mx-auto px-4 relative">
+          <div className="container mx-auto max-w-6xl">
             <motion.div
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="max-w-5xl mx-auto text-center"
+              className="text-center"
             >
-              {/* Badge */}
-              <motion.div
-                variants={scaleIn}
-                whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 border border-violet-500/30 mb-8 cursor-pointer"
-              >
+              {/* Avatar/Photo */}
+              {aboutContent?.profilePhotoUrl && (
                 <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  variants={itemVariants}
+                  className="mb-8"
                 >
-                  <Sparkles className="h-5 w-5 text-violet-400" />
+                  <motion.div 
+                    className="w-32 h-32 mx-auto rounded-full overflow-hidden ring-4 ring-violet-500/30 ring-offset-4 ring-offset-background"
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                  >
+                    <img 
+                      src={aboutContent.profilePhotoUrl} 
+                      alt="Фото" 
+                      className="w-full h-full object-cover"
+                    />
+                  </motion.div>
                 </motion.div>
-                <span className="text-sm font-semibold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-                  Креативное портфолио
+              )}
+
+              {/* Greeting */}
+              <motion.div variants={itemVariants} className="mb-6">
+                <span className="inline-block px-5 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-500 dark:text-violet-400 text-sm font-medium">
+                  Привет, я {aboutContent?.title || "Креатор"}
                 </span>
               </motion.div>
 
               {/* Main Heading */}
               <motion.h1 
                 variants={itemVariants}
-                className="text-5xl md:text-7xl lg:text-8xl font-black mb-8 leading-[0.9]"
+                className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold mb-8 leading-[1.1] tracking-tight"
               >
+                <span className="block text-foreground">Создаю</span>
                 <motion.span 
-                  className="block"
+                  className="block mt-2"
                   animate={{ 
                     backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
                   }}
-                  transition={{ duration: 5, repeat: Infinity }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
                   style={{
                     backgroundSize: "200% 200%",
-                    backgroundImage: "linear-gradient(90deg, #8b5cf6, #d946ef, #06b6d4, #8b5cf6)",
+                    backgroundImage: "linear-gradient(90deg, #8b5cf6, #d946ef, #ec4899, #8b5cf6)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                   }}
                 >
-                  Покажи миру
+                  цифровые чудеса
                 </motion.span>
-                <span className="block mt-2">
-                  свой{" "}
-                  <motion.span 
-                    className="relative inline-block"
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <span className="relative z-10">талант</span>
-                    <motion.span 
-                      className="absolute -inset-2 bg-gradient-to-r from-violet-500/30 to-fuchsia-500/30 rounded-lg blur-lg -z-10"
-                      animate={{ opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    />
-                  </motion.span>
-                </span>
               </motion.h1>
 
-              {/* Subtitle */}
+              {/* Bio */}
               <motion.p 
                 variants={itemVariants}
-                className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed"
+                className="text-lg sm:text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed"
               >
-                Создавай. Вдохновляй. Удивляй.
-                <br />
-                <span className="text-violet-400">Твоё портфолио — твоя история.</span>
+                {aboutContent?.bio || "Дизайнер и разработчик. Превращаю идеи в красивые цифровые продукты."}
               </motion.p>
 
               {/* CTA Buttons */}
               <motion.div
                 variants={itemVariants}
-                className="flex flex-col sm:flex-row items-center justify-center gap-5"
+                className="flex flex-col sm:flex-row items-center justify-center gap-4"
               >
-                <motion.div
-                  whileHover={{ scale: 1.05, y: -3 }}
-                  whileTap={{ scale: 0.95 }}
-                >
+                <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}>
                   <Button 
                     size="lg" 
                     asChild 
-                    className="px-10 py-7 text-lg bg-gradient-to-r from-violet-600 via-fuchsia-600 to-violet-600 bg-[length:200%_100%] hover:bg-[position:100%_0] transition-all duration-500 border-0 shadow-lg shadow-violet-500/25" 
-                    data-testid="button-get-started"
+                    className="px-8 py-6 text-base bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 border-0 shadow-xl shadow-violet-500/25" 
+                    data-testid="button-view-works"
                   >
-                    <a href="/api/login">
-                      Начать сейчас
-                      <motion.span
-                        animate={{ x: [0, 5, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      >
-                        <ArrowRight className="ml-2 h-5 w-5" />
-                      </motion.span>
+                    <a href="#works">
+                      Смотреть работы
+                      <ArrowDown className="ml-2 h-4 w-4" />
                     </a>
                   </Button>
                 </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button 
                     size="lg" 
                     variant="outline" 
                     asChild 
-                    className="px-10 py-7 text-lg border-2 border-violet-500/30 hover:border-violet-500/60 hover:bg-violet-500/10" 
-                    data-testid="button-view-gallery"
+                    className="px-8 py-6 text-base border-2"
+                    data-testid="button-contact-me"
                   >
-                    <a href="/gallery">Смотреть галерею</a>
+                    <Link href="/contact">
+                      Написать мне
+                      <Mail className="ml-2 h-4 w-4" />
+                    </Link>
                   </Button>
                 </motion.div>
+              </motion.div>
+
+              {/* Skills Icons */}
+              <motion.div
+                variants={itemVariants}
+                className="flex items-center justify-center gap-8 mt-16"
+              >
+                {[
+                  { icon: Code2, label: "Код" },
+                  { icon: Palette, label: "Дизайн" },
+                  { icon: Lightbulb, label: "Идеи" },
+                ].map((skill, i) => (
+                  <motion.div
+                    key={skill.label}
+                    className="flex flex-col items-center gap-2 text-muted-foreground"
+                    whileHover={{ scale: 1.1, y: -5, color: "hsl(var(--foreground))" }}
+                  >
+                    <skill.icon className="h-6 w-6" />
+                    <span className="text-xs font-medium">{skill.label}</span>
+                  </motion.div>
+                ))}
               </motion.div>
             </motion.div>
           </div>
 
-          {/* Scroll indicator */}
+          {/* Scroll Indicator */}
           <motion.div
             className="absolute bottom-8 left-1/2 -translate-x-1/2"
             animate={{ y: [0, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            <div className="w-6 h-10 rounded-full border-2 border-violet-500/50 flex items-start justify-center p-2">
-              <motion.div
-                className="w-1.5 h-3 rounded-full bg-violet-500"
-                animate={{ y: [0, 12, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-            </div>
+            <a href="#works" className="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+              <span className="text-xs font-medium">Листай</span>
+              <div className="w-6 h-10 rounded-full border-2 border-current flex items-start justify-center p-2">
+                <motion.div
+                  className="w-1.5 h-2.5 rounded-full bg-current"
+                  animate={{ y: [0, 10, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+              </div>
+            </a>
           </motion.div>
         </motion.section>
 
-        {/* Skills Section */}
-        <section className="py-32 relative">
+        {/* Works Section */}
+        <section id="works" className="py-24 md:py-32 relative">
           <div className="container mx-auto px-4">
             <motion.div
-              initial="hidden"
-              whileInView="visible"
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
-              variants={containerVariants}
-              className="text-center mb-20"
+              transition={{ duration: 0.6 }}
+              className="text-center mb-16"
             >
-              <motion.h2 
-                variants={flyInLeft}
-                className="text-4xl md:text-6xl font-black mb-6"
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="inline-block px-4 py-1.5 rounded-full bg-violet-500/10 text-violet-500 dark:text-violet-400 text-sm font-medium mb-4"
+              >
+                Портфолио
+              </motion.span>
+              <h2 
+                className="font-display text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6"
               >
                 Мои{" "}
                 <span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">
-                  суперсилы
+                  работы
                 </span>
-              </motion.h2>
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+                Избранные проекты, над которыми я работал
+              </p>
             </motion.div>
 
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={containerVariants}
-              className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
-            >
-              {skills.map((skill, i) => (
-                <motion.div
-                  key={skill.label}
-                  variants={i % 2 === 0 ? flyInLeft : flyInRight}
-                  whileHover={{ 
-                    scale: 1.05, 
-                    y: -10,
-                    rotateY: 5,
-                    transition: { type: "spring", stiffness: 300 }
-                  }}
-                  className="group relative p-8 rounded-3xl bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 backdrop-blur-sm cursor-pointer overflow-hidden"
-                >
+            {publishedProjects.length > 0 ? (
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-50px" }}
+                className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
+              >
+                {publishedProjects.map((project, i) => (
                   <motion.div
-                    className={`absolute inset-0 bg-gradient-to-br ${skill.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}
-                  />
-                  <motion.div
-                    whileHover={{ rotate: 360, scale: 1.2 }}
-                    transition={{ duration: 0.6 }}
-                    className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${skill.color} flex items-center justify-center mb-6 shadow-lg`}
+                    key={project.id}
+                    custom={i}
+                    variants={cardVariants}
+                    whileHover={{ y: -10, scale: 1.02 }}
+                    className="group relative bg-card/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/10 cursor-pointer"
+                    onClick={() => window.location.href = '/gallery'}
                   >
-                    <skill.icon className="h-8 w-8 text-white" />
-                  </motion.div>
-                  <h3 className="text-2xl font-bold mb-2">{skill.label}</h3>
-                  <div className="h-1 w-12 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 group-hover:w-full transition-all duration-500" />
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
+                    <div className="aspect-[4/3] overflow-hidden">
+                      {project.coverImageUrl ? (
+                        <img 
+                          src={project.coverImageUrl} 
+                          alt={project.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center">
+                          <Sparkles className="h-12 w-12 text-violet-500/50" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
+                    
+                    <div className="absolute bottom-0 left-0 right-0 p-5 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                      <h3 className="text-lg font-bold text-white mb-1 drop-shadow-lg">{project.title}</h3>
+                      {project.tags && project.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {project.tags.slice(0, 3).map(tag => (
+                            <span key={tag} className="px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white/90 text-xs">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
-        {/* Features Section */}
-        <section className="py-32 relative overflow-hidden">
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={containerVariants}
-              className="grid lg:grid-cols-3 gap-8"
-            >
-              {features.map((feature, i) => (
-                <motion.div
-                  key={feature.title}
-                  variants={scaleIn}
-                  custom={i}
-                  whileHover={{ y: -20, scale: 1.02 }}
-                  className="group relative p-10 rounded-3xl bg-gradient-to-br from-violet-500/10 via-transparent to-fuchsia-500/10 border border-violet-500/20 overflow-hidden"
-                >
-                  <motion.div
-                    className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 blur-3xl group-hover:scale-150 transition-transform duration-700"
-                  />
-                  <div className="relative z-10">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      whileInView={{ width: "3rem" }}
-                      transition={{ delay: 0.5 + i * 0.2, duration: 0.8 }}
-                      className="h-1 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full mb-6"
-                    />
-                    <h3 className="text-2xl font-bold mb-3">{feature.title}</h3>
-                    <p className="text-muted-foreground text-lg">{feature.desc}</p>
-                  </div>
+                    <motion.div 
+                      className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                      whileHover={{ scale: 1.1 }}
+                    >
+                      <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <ExternalLink className="h-5 w-5 text-white" />
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="text-center py-20"
+              >
+                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-violet-500/10 flex items-center justify-center">
+                  <Sparkles className="h-10 w-10 text-violet-500" />
+                </div>
+                <p className="text-xl text-muted-foreground mb-6">
+                  Скоро здесь появятся мои работы
+                </p>
+                <Button asChild variant="outline" data-testid="button-login-to-add">
+                  <a href="/api/login">Войти чтобы добавить</a>
+                </Button>
+              </motion.div>
+            )}
+
+            {publishedProjects.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="text-center mt-12"
+              >
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button size="lg" variant="outline" asChild className="px-8" data-testid="button-all-works">
+                    <Link href="/gallery">
+                      Все работы
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
                 </motion.div>
-              ))}
-            </motion.div>
+              </motion.div>
+            )}
           </div>
         </section>
 
         {/* CTA Section */}
-        <section className="py-32 relative">
+        <section className="py-24 md:py-32 relative">
           <div className="container mx-auto px-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ type: "spring", stiffness: 100 }}
-              className="relative max-w-4xl mx-auto text-center p-16 rounded-[3rem] bg-gradient-to-br from-violet-600/20 via-fuchsia-600/10 to-cyan-600/20 border border-violet-500/30 overflow-hidden"
+              className="max-w-3xl mx-auto text-center p-10 md:p-16 rounded-3xl bg-gradient-to-br from-violet-600/10 via-fuchsia-600/5 to-pink-600/10 border border-violet-500/20 relative overflow-hidden"
             >
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-violet-600/10 to-fuchsia-600/10"
-                animate={{ 
-                  backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"]
-                }}
-                transition={{ duration: 10, repeat: Infinity }}
+                className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-violet-500/20 blur-3xl"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+                transition={{ duration: 5, repeat: Infinity }}
               />
               
               <motion.h2
-                initial={{ y: 30 }}
+                initial={{ y: 20 }}
                 whileInView={{ y: 0 }}
-                className="relative z-10 text-4xl md:text-5xl font-black mb-6"
+                viewport={{ once: true }}
+                className="font-display relative z-10 text-3xl sm:text-4xl md:text-5xl font-extrabold mb-6"
               >
-                Готов{" "}
-                <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-                  удивить мир?
+                Есть идея?{" "}
+                <span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">
+                  Давай обсудим!
                 </span>
               </motion.h2>
               
               <motion.p
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="relative z-10 text-xl text-muted-foreground mb-10 max-w-xl mx-auto"
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="relative z-10 text-lg text-muted-foreground mb-10"
               >
-                Создай портфолио, которое запомнят. Покажи свои лучшие работы красиво.
+                Всегда открыт для интересных проектов и сотрудничества
               </motion.p>
               
               <motion.div
@@ -447,13 +448,13 @@ export default function Landing() {
                 <Button 
                   size="lg" 
                   asChild 
-                  className="px-12 py-8 text-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 border-0 shadow-2xl shadow-violet-500/30"
-                  data-testid="button-create-portfolio"
+                  className="px-10 py-7 text-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 border-0 shadow-xl shadow-violet-500/25"
+                  data-testid="button-contact-cta"
                 >
-                  <a href="/api/login">
-                    Создать портфолио
-                    <ArrowRight className="ml-3 h-6 w-6" />
-                  </a>
+                  <Link href="/contact">
+                    Написать мне
+                    <Mail className="ml-3 h-5 w-5" />
+                  </Link>
                 </Button>
               </motion.div>
             </motion.div>
@@ -462,23 +463,41 @@ export default function Landing() {
       </main>
 
       {/* Footer */}
-      <motion.footer 
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        className="border-t border-violet-500/10 py-10 relative z-10"
-      >
-        <div className="container mx-auto px-4 text-center">
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            className="inline-flex items-center gap-2 text-muted-foreground cursor-pointer"
-            onClick={() => setSecretClicks(prev => prev + 1)}
-          >
-            <Sparkles className="h-5 w-5 text-violet-500" />
-            <span className="font-medium">Сделано с любовью</span>
-            <Heart className="h-4 w-4 text-pink-500" />
-          </motion.div>
+      <footer className="border-t border-white/5 py-10 relative z-10">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="flex items-center gap-2 text-muted-foreground cursor-pointer"
+              onClick={() => setSecretClicks(prev => prev + 1)}
+            >
+              <Sparkles className="h-5 w-5 text-violet-500" />
+              <span className="font-medium">{aboutContent?.title || "Портфолио"}</span>
+            </motion.div>
+            
+            <div className="flex items-center gap-4">
+              <motion.a 
+                href="https://github.com" 
+                target="_blank" 
+                rel="noopener"
+                whileHover={{ scale: 1.1, y: -2 }}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Github className="h-5 w-5" />
+              </motion.a>
+              <motion.div whileHover={{ scale: 1.1, y: -2 }}>
+                <Link href="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Mail className="h-5 w-5" />
+                </Link>
+              </motion.div>
+            </div>
+            
+            <p className="text-sm text-muted-foreground">
+              Сделано с <Heart className="inline h-3 w-3 text-pink-500" /> 
+            </p>
+          </div>
         </div>
-      </motion.footer>
+      </footer>
     </div>
   );
 }
