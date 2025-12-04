@@ -302,6 +302,29 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/admin/messages/:id/reply", isAuthenticated, async (req: any, res) => {
+    try {
+      const sessionUser = req.session?.user;
+      if (!sessionUser?.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { reply } = req.body;
+      if (!reply || typeof reply !== 'string' || reply.trim().length === 0) {
+        return res.status(400).json({ message: "Reply text is required" });
+      }
+
+      const message = await storage.replyToMessage(req.params.id, reply.trim());
+      if (!message) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+      res.json(message);
+    } catch (error) {
+      console.error("Error replying to message:", error);
+      res.status(500).json({ message: "Failed to send reply" });
+    }
+  });
+
   app.delete("/api/admin/messages/:id", isAuthenticated, async (req: any, res) => {
     try {
       const sessionUser = req.session?.user;

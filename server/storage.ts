@@ -42,6 +42,7 @@ export interface IStorage {
   getContactMessages(): Promise<ContactMessage[]>;
   createContactMessage(message: InsertContactMessage): Promise<ContactMessage>;
   markMessageAsRead(id: string): Promise<ContactMessage | undefined>;
+  replyToMessage(id: string, reply: string): Promise<ContactMessage | undefined>;
   deleteContactMessage(id: string): Promise<boolean>;
   
   // Project images operations
@@ -165,6 +166,15 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db
       .update(contactMessages)
       .set({ isRead: true })
+      .where(eq(contactMessages.id, id))
+      .returning();
+    return updated;
+  }
+
+  async replyToMessage(id: string, reply: string): Promise<ContactMessage | undefined> {
+    const [updated] = await db
+      .update(contactMessages)
+      .set({ reply, repliedAt: new Date(), isRead: true })
       .where(eq(contactMessages.id, id))
       .returning();
     return updated;

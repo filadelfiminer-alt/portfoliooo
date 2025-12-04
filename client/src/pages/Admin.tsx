@@ -125,6 +125,8 @@ export default function Admin() {
   const [projectImages, setProjectImages] = useState<ProjectImage[]>([]);
   const [aboutPhotoUrl, setAboutPhotoUrl] = useState<string>("");
   const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
+  const [replyingToMessage, setReplyingToMessage] = useState<ContactMessage | null>(null);
+  const [replyText, setReplyText] = useState("");
 
   const { data: projects = [], isLoading } = useQuery<Project[]>({
     queryKey: ["/api/admin/projects"],
@@ -580,6 +582,34 @@ export default function Admin() {
       toast({
         title: "Ошибка",
         description: "Не удалось удалить сообщение",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const replyMutation = useMutation({
+    mutationFn: async ({ id, reply }: { id: string; reply: string }) => {
+      return apiRequest("POST", `/api/admin/messages/${id}/reply`, { reply });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/messages"] });
+      toast({ title: "Ответ отправлен" });
+      setReplyingToMessage(null);
+      setReplyText("");
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Сессия истекла",
+          description: "Пожалуйста, войдите снова.",
+          variant: "destructive",
+        });
+        window.location.href = "/login";
+        return;
+      }
+      toast({
+        title: "Ошибка",
+        description: "Не удалось отправить ответ",
         variant: "destructive",
       });
     },
@@ -1719,6 +1749,11 @@ export default function Admin() {
                                   Новое
                                 </Badge>
                               )}
+                              {message.reply && (
+                                <Badge variant="secondary" className="text-xs" data-testid={`badge-replied-${message.id}`}>
+                                  Отвечено
+                                </Badge>
+                              )}
                               <span className="text-sm text-muted-foreground flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
                                 {message.createdAt ? new Date(message.createdAt).toLocaleDateString('ru-RU', {
@@ -1739,6 +1774,19 @@ export default function Admin() {
                             <p className={`text-sm ${expandedMessageId === message.id ? '' : 'line-clamp-2'}`} data-testid={`message-text-${message.id}`}>
                               {message.message}
                             </p>
+                            {message.reply && (
+                              <div className="mt-3 pt-3 border-t border-border/50">
+                                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                  <Badge variant="secondary" className="text-xs">Ваш ответ</Badge>
+                                  {message.repliedAt && (
+                                    <span className="text-xs text-muted-foreground">
+                                      {new Date(message.repliedAt).toLocaleDateString("ru-RU")}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-foreground/80">{message.reply}</p>
+                              </div>
+                            )}
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
                             <Button
@@ -1755,6 +1803,17 @@ export default function Admin() {
                               ) : (
                                 <ChevronDown className="h-4 w-4" />
                               )}
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setReplyingToMessage(message);
+                              }}
+                              data-testid={`button-reply-message-${message.id}`}
+                            >
+                              <MessageSquare className="h-4 w-4 text-primary" />
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
@@ -1794,6 +1853,40 @@ export default function Admin() {
                   ))}
                 </div>
               )}
+
+              <Dialog open={!!replyingToMessage} onOpenChange={(open) => !open && setReplyingToMessage(null)}>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Ответить на сообщение</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="bg-muted/50 rounded-lg p-3">
+                      <p className="text-sm text-muted-foreground mb-1">Сообщение от {replyingToMessage?.name}:</p>
+                      <p className="text-sm">{replyingToMessage?.message}</p>
+                    </div>
+                    <Textarea
+                      placeholder="Введите ваш ответ..."
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      rows={4}
+                      data-testid="input-reply-text"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setReplyingToMessage(null)}>
+                        Отмена
+                      </Button>
+                      <Button 
+                        onClick={() => replyingToMessage && replyMutation.mutate({ id: replyingToMessage.id, reply: replyText })}
+                        disabled={!replyText.trim() || replyMutation.isPending}
+                        data-testid="button-send-reply"
+                      >
+                        {replyMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                        Отправить
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </TabsContent>
 
             <TabsContent value="settings">

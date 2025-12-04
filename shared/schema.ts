@@ -92,6 +92,8 @@ export const contactMessages = pgTable("contact_messages", {
   subject: varchar("subject", { length: 500 }),
   message: text("message").notNull(),
   isRead: boolean("is_read").default(false),
+  reply: text("reply"),
+  repliedAt: timestamp("replied_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
