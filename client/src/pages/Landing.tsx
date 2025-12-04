@@ -10,18 +10,18 @@ export default function Landing() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl">Portfolio</span>
+            <span className="font-bold text-xl">Портфолио</span>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <Button variant="ghost" size="sm" asChild data-testid="button-nav-about">
-              <a href="/about">About</a>
+              <a href="/about">Обо мне</a>
             </Button>
             <Button variant="ghost" size="sm" asChild data-testid="button-nav-contact">
-              <a href="/contact">Contact</a>
+              <a href="/contact">Контакты</a>
             </Button>
             <ThemeToggle />
             <Button asChild data-testid="button-login">
-              <a href="/api/login">Sign In</a>
+              <a href="/api/login">Войти</a>
             </Button>
           </div>
         </div>
@@ -29,7 +29,7 @@ export default function Landing() {
 
       <main className="relative">
         <section className="min-h-screen flex items-center justify-center pt-16">
-          <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
           </div>
@@ -48,19 +48,19 @@ export default function Landing() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-8"
               >
                 <Sparkles className="h-4 w-4" />
-                <span className="text-sm font-medium">Creative Portfolio</span>
+                <span className="text-sm font-medium">Креативное портфолио</span>
               </motion.div>
 
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-                Showcase Your{" "}
+                Покажите свои{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">
-                  Best Work
+                  лучшие работы
                 </span>
               </h1>
 
               <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-                A beautiful portfolio platform to display your creative projects. 
-                Easy to manage, stunning to view.
+                Прекрасная платформа для демонстрации ваших творческих проектов. 
+                Легко управлять, великолепно смотреть.
               </p>
 
               <motion.div
@@ -71,12 +71,12 @@ export default function Landing() {
               >
                 <Button size="lg" asChild className="px-8" data-testid="button-get-started">
                   <a href="/api/login">
-                    Get Started
+                    Начать
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </a>
                 </Button>
                 <Button size="lg" variant="outline" asChild data-testid="button-view-gallery">
-                  <a href="/gallery">View Gallery</a>
+                  <a href="/gallery">Галерея работ</a>
                 </Button>
               </motion.div>
             </motion.div>
@@ -92,10 +92,10 @@ export default function Landing() {
               className="text-center mb-16"
             >
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Featured Work
+                Избранные работы
               </h2>
               <p className="text-muted-foreground max-w-xl mx-auto">
-                Sign in to create your own stunning portfolio and showcase your projects.
+                Войдите, чтобы создать своё уникальное портфолио и показать свои проекты.
               </p>
             </motion.div>
 
@@ -114,7 +114,7 @@ export default function Landing() {
                       <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
                         <Sparkles className="h-8 w-8 text-primary" />
                       </div>
-                      <p className="text-muted-foreground">Your Project {i}</p>
+                      <p className="text-muted-foreground">Ваш проект {i}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -131,15 +131,15 @@ export default function Landing() {
               viewport={{ once: true }}
             >
               <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                Ready to Start?
+                Готовы начать?
               </h2>
               <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-                Create your professional portfolio in minutes. 
-                Upload your work, customize your gallery, and share with the world.
+                Создайте своё профессиональное портфолио за считанные минуты. 
+                Загрузите свои работы, настройте галерею и поделитесь с миром.
               </p>
               <Button size="lg" asChild data-testid="button-create-portfolio">
                 <a href="/api/login">
-                  Create Your Portfolio
+                  Создать портфолио
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </a>
               </Button>
@@ -150,7 +150,7 @@ export default function Landing() {
 
       <footer className="border-t py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>Creative Portfolio Platform</p>
+          <p>Платформа для креативных портфолио</p>
         </div>
       </footer>
     </div>
