@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
-import { ArrowRight, ArrowDown, Code2, Palette, Lightbulb, Sparkles, Star, Heart, ExternalLink, Github, Mail, MessageCircle, Hand } from "lucide-react";
+import { ArrowRight, ArrowDown, Code2, Palette, Lightbulb, Sparkles, Star, Heart, ExternalLink, Github, Mail, MessageCircle } from "lucide-react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 import type { Project, About } from "@shared/schema";
@@ -323,15 +323,16 @@ export default function Landing() {
                           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                         />
                         
-                        {/* Waving hand icon */}
+                        {/* Waving hand emoji */}
                         <motion.div
                           animate={{ 
                             rotate: [0, 20, -10, 20, 0]
                           }}
                           transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
-                          className="relative z-10 origin-bottom-right"
+                          className="relative z-10 origin-bottom-right text-lg"
+                          style={{ filter: "drop-shadow(0 0 4px rgba(251,191,36,0.3))" }}
                         >
-                          <Hand className="w-5 h-5 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]" />
+                          👋
                         </motion.div>
                       </motion.div>
                     </motion.div>
