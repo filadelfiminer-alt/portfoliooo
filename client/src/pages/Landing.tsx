@@ -1,12 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-background">
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
+    <div className="min-h-screen bg-background relative">
+      <AnimatedBackground variant="cosmic" intensity="vibrant" interactive />
+      
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/30">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" />
@@ -27,14 +30,9 @@ export default function Landing() {
         </div>
       </header>
 
-      <main className="relative">
+      <main className="relative z-10">
         <section className="min-h-screen flex items-center justify-center pt-16">
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
-          </div>
-
-          <div className="container mx-auto px-4 relative z-10">
+          <div className="container mx-auto px-4 relative">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}

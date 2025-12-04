@@ -50,7 +50,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background relative">
-      <AnimatedBackground variant="aurora" intensity="medium" interactive />
+      <AnimatedBackground variant="cosmic" intensity="vibrant" interactive />
 
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/70 backdrop-blur-xl border-b border-border/50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
