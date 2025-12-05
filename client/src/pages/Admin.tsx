@@ -59,15 +59,11 @@ import {
   X,
   GripVertical,
   User,
-  Mail,
   MessageSquare,
   Settings,
-  Calendar,
   FolderKanban,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
-import type { Project, ProjectImage, About, ContactMessage, SiteSettings } from "@shared/schema";
+import type { Project, ProjectImage, About, SiteSettings } from "@shared/schema";
 
 const projectFormSchema = z.object({
   title: z.string().min(1, "Требуется название"),
@@ -124,9 +120,6 @@ export default function Admin() {
   const [localProjects, setLocalProjects] = useState<Project[]>([]);
   const [projectImages, setProjectImages] = useState<ProjectImage[]>([]);
   const [aboutPhotoUrl, setAboutPhotoUrl] = useState<string>("");
-  const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
-  const [replyingToMessage, setReplyingToMessage] = useState<ContactMessage | null>(null);
-  const [replyText, setReplyText] = useState("");
   const [galleryUrlInput, setGalleryUrlInput] = useState("");
 
   const { data: projects = [], isLoading } = useQuery<Project[]>({
@@ -136,11 +129,6 @@ export default function Admin() {
 
   const { data: aboutContent } = useQuery<About>({
     queryKey: ["/api/about"],
-  });
-
-  const { data: messages = [], isLoading: messagesLoading } = useQuery<ContactMessage[]>({
-    queryKey: ["/api/admin/messages"],
-    enabled: !!user?.isAdmin,
   });
 
   const { data: siteSettings } = useQuery<SiteSettings>({
@@ -544,85 +532,6 @@ export default function Admin() {
     },
   });
 
-  const markAsReadMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return apiRequest("PATCH", `/api/admin/messages/${id}/read`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/messages"] });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Сессия истекла",
-          description: "Пожалуйста, войдите снова.",
-          variant: "destructive",
-        });
-        window.location.href = "/login";
-        return;
-      }
-      toast({
-        title: "Ошибка",
-        description: "Не удалось обновить сообщение",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteMessageMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return apiRequest("DELETE", `/api/admin/messages/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/messages"] });
-      toast({ title: "Сообщение удалено" });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Сессия истекла",
-          description: "Пожалуйста, войдите снова.",
-          variant: "destructive",
-        });
-        window.location.href = "/login";
-        return;
-      }
-      toast({
-        title: "Ошибка",
-        description: "Не удалось удалить сообщение",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const replyMutation = useMutation({
-    mutationFn: async ({ id, reply }: { id: string; reply: string }) => {
-      return apiRequest("POST", `/api/admin/messages/${id}/reply`, { reply });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/messages"] });
-      toast({ title: "Ответ отправлен" });
-      setReplyingToMessage(null);
-      setReplyText("");
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Сессия истекла",
-          description: "Пожалуйста, войдите снова.",
-          variant: "destructive",
-        });
-        window.location.href = "/login";
-        return;
-      }
-      toast({
-        title: "Ошибка",
-        description: "Не удалось отправить ответ",
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleEdit = async (project: Project) => {
     setEditingProject(project);
     form.reset({
@@ -757,17 +666,6 @@ export default function Admin() {
     }
   };
 
-  const handleExpandMessage = (message: ContactMessage) => {
-    if (expandedMessageId === message.id) {
-      setExpandedMessageId(null);
-    } else {
-      setExpandedMessageId(message.id);
-      if (!message.isRead) {
-        markAsReadMutation.mutate(message.id);
-      }
-    }
-  };
-
   const reorderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const handleReorder = useCallback((newOrder: Project[]) => {
@@ -785,8 +683,6 @@ export default function Admin() {
       reorderMutation.mutate(projectOrders);
     }, 300);
   }, [reorderMutation]);
-
-  const unreadCount = messages.filter((m) => !m.isRead).length;
 
   if (authLoading) {
     return (
@@ -886,15 +782,6 @@ export default function Admin() {
                 <User className="h-4 w-4 mr-2" />
                 Обо мне
               </TabsTrigger>
-              <TabsTrigger value="messages" data-testid="tab-messages" className="relative">
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Сообщения
-                {unreadCount > 0 && (
-                  <Badge variant="destructive" className="ml-2 h-5 min-w-5 px-1.5">
-                    {unreadCount}
-                  </Badge>
-                )}
-              </TabsTrigger>
               <TabsTrigger value="settings" data-testid="tab-settings">
                 <Settings className="h-4 w-4 mr-2" />
                 Настройки сайта
@@ -958,38 +845,63 @@ export default function Admin() {
                                   <X className="h-4 w-4" />
                                 </Button>
                               </div>
-                            ) : hasObjectStorage ? (
-                              <div className="w-full">
-                                <ObjectUploader
-                                  maxNumberOfFiles={1}
-                                  maxFileSize={10485760}
-                                  onGetUploadParameters={handleGetUploadParameters}
-                                  onComplete={handleUploadComplete}
-                                  buttonVariant="outline"
-                                  buttonClassName="w-full h-32 border-dashed"
-                                >
-                                  <div className="flex flex-col items-center gap-2">
-                                    <Image className="h-8 w-8 text-muted-foreground" />
-                                    <span className="text-sm text-muted-foreground">
-                                      Нажмите для загрузки
-                                    </span>
-                                  </div>
-                                </ObjectUploader>
-                              </div>
                             ) : (
-                              <div className="w-full space-y-2">
-                                <Input
-                                  placeholder="Вставьте URL изображения (например, с Cloudinary, ImgBB)"
-                                  value={form.watch("imageUrl") || ""}
-                                  onChange={(e) => {
-                                    form.setValue("imageUrl", e.target.value);
-                                    setUploadedImageUrl(e.target.value);
-                                  }}
-                                  data-testid="input-project-image-url"
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                  Загрузите изображение на внешний хостинг и вставьте ссылку
-                                </p>
+                              <div className="w-full space-y-4">
+                                {hasObjectStorage && (
+                                  <div>
+                                    <ObjectUploader
+                                      maxNumberOfFiles={1}
+                                      maxFileSize={10485760}
+                                      onGetUploadParameters={handleGetUploadParameters}
+                                      onComplete={handleUploadComplete}
+                                      buttonVariant="outline"
+                                      buttonClassName="w-full h-32 border-dashed"
+                                    >
+                                      <div className="flex flex-col items-center gap-2">
+                                        <Image className="h-8 w-8 text-muted-foreground" />
+                                        <span className="text-sm text-muted-foreground">
+                                          Загрузить с компьютера
+                                        </span>
+                                      </div>
+                                    </ObjectUploader>
+                                    <div className="flex items-center gap-4 my-3">
+                                      <div className="flex-1 h-px bg-border"></div>
+                                      <span className="text-xs text-muted-foreground">или</span>
+                                      <div className="flex-1 h-px bg-border"></div>
+                                    </div>
+                                  </div>
+                                )}
+                                <div className="space-y-2">
+                                  <Input
+                                    placeholder="Вставьте URL изображения"
+                                    value={form.watch("imageUrl") || ""}
+                                    onChange={(e) => {
+                                      const url = e.target.value;
+                                      form.setValue("imageUrl", url);
+                                      if (url.trim()) {
+                                        setUploadedImageUrl(url);
+                                      }
+                                    }}
+                                    data-testid="input-project-image-url"
+                                  />
+                                  <div className="flex gap-2">
+                                    <Button
+                                      type="button"
+                                      variant="secondary"
+                                      size="sm"
+                                      onClick={() => {
+                                        const url = form.watch("imageUrl") || "";
+                                        if (url.trim()) {
+                                          setUploadedImageUrl(url.trim());
+                                          toast({ title: "Изображение загружено" });
+                                        }
+                                      }}
+                                      data-testid="button-apply-image-url"
+                                    >
+                                      Применить ссылку
+                                    </Button>
+                                  </div>
+                                </div>
                               </div>
                             )}
                           </div>
@@ -1776,192 +1688,6 @@ export default function Admin() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="messages">
-              <div className="mb-8">
-                <h1 className="text-3xl font-bold">Сообщения</h1>
-                <p className="text-muted-foreground mt-1">
-                  Просмотр сообщений от посетителей
-                </p>
-              </div>
-
-              {messagesLoading ? (
-                <div className="flex items-center justify-center py-20">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : messages.length === 0 ? (
-                <Card className="py-20">
-                  <CardContent className="text-center">
-                    <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
-                      <Mail className="h-10 w-10 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">Нет сообщений</h3>
-                    <p className="text-muted-foreground">
-                      Когда посетители отправят сообщения, они появятся здесь
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-3">
-                  {messages.map((message) => (
-                    <Card 
-                      key={message.id} 
-                      className={`cursor-pointer transition-colors ${!message.isRead ? 'border-primary/50 bg-primary/5' : ''}`}
-                      data-testid={`message-card-${message.id}`}
-                    >
-                      <CardContent className="p-4">
-                        <div 
-                          className="flex items-start justify-between gap-4"
-                          onClick={() => handleExpandMessage(message)}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span className="font-semibold" data-testid={`message-name-${message.id}`}>
-                                {message.name}
-                              </span>
-                              {!message.isRead && (
-                                <Badge variant="destructive" className="text-xs" data-testid={`badge-new-${message.id}`}>
-                                  Новое
-                                </Badge>
-                              )}
-                              {message.reply && (
-                                <Badge variant="secondary" className="text-xs" data-testid={`badge-replied-${message.id}`}>
-                                  Отвечено
-                                </Badge>
-                              )}
-                              <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {message.createdAt ? new Date(message.createdAt).toLocaleDateString('ru-RU', {
-                                  day: 'numeric',
-                                  month: 'short',
-                                  year: 'numeric',
-                                }) : ''}
-                              </span>
-                            </div>
-                            <div className="text-sm text-muted-foreground mb-1" data-testid={`message-email-${message.id}`}>
-                              {message.email}
-                            </div>
-                            {message.subject && (
-                              <div className="font-medium mb-1" data-testid={`message-subject-${message.id}`}>
-                                {message.subject}
-                              </div>
-                            )}
-                            <p className={`text-sm ${expandedMessageId === message.id ? '' : 'line-clamp-2'}`} data-testid={`message-text-${message.id}`}>
-                              {message.message}
-                            </p>
-                            {message.reply && (
-                              <div className="mt-3 pt-3 border-t border-border/50">
-                                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                  <Badge variant="secondary" className="text-xs">Ваш ответ</Badge>
-                                  {message.repliedAt && (
-                                    <span className="text-xs text-muted-foreground">
-                                      {new Date(message.repliedAt).toLocaleDateString("ru-RU")}
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-sm text-foreground/80">{message.reply}</p>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleExpandMessage(message);
-                              }}
-                              data-testid={`button-expand-${message.id}`}
-                            >
-                              {expandedMessageId === message.id ? (
-                                <ChevronUp className="h-4 w-4" />
-                              ) : (
-                                <ChevronDown className="h-4 w-4" />
-                              )}
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setReplyingToMessage(message);
-                              }}
-                              data-testid={`button-reply-message-${message.id}`}
-                            >
-                              <MessageSquare className="h-4 w-4 text-primary" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={(e) => e.stopPropagation()}
-                                  data-testid={`button-delete-message-${message.id}`}
-                                >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Удалить сообщение</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Вы уверены, что хотите удалить сообщение от {message.name}?
-                                    Это действие нельзя отменить.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Отмена</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => deleteMessageMutation.mutate(message.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    data-testid={`button-confirm-delete-message-${message.id}`}
-                                  >
-                                    Удалить
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-
-              <Dialog open={!!replyingToMessage} onOpenChange={(open) => !open && setReplyingToMessage(null)}>
-                <DialogContent className="max-w-lg">
-                  <DialogHeader>
-                    <DialogTitle>Ответить на сообщение</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-sm text-muted-foreground mb-1">Сообщение от {replyingToMessage?.name}:</p>
-                      <p className="text-sm">{replyingToMessage?.message}</p>
-                    </div>
-                    <Textarea
-                      placeholder="Введите ваш ответ..."
-                      value={replyText}
-                      onChange={(e) => setReplyText(e.target.value)}
-                      rows={4}
-                      data-testid="input-reply-text"
-                    />
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setReplyingToMessage(null)}>
-                        Отмена
-                      </Button>
-                      <Button 
-                        onClick={() => replyingToMessage && replyMutation.mutate({ id: replyingToMessage.id, reply: replyText })}
-                        disabled={!replyText.trim() || replyMutation.isPending}
-                        data-testid="button-send-reply"
-                      >
-                        {replyMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                        Отправить
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </TabsContent>
 
             <TabsContent value="settings">
               <div className="mb-8">

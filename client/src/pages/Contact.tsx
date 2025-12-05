@@ -1,92 +1,80 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import {
   CreativeSparkIcon,
   ContactEnvelopeIcon,
-  UserProfileIcon,
 } from "@/components/CustomIcons";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import {
-  Send,
-  ArrowLeft,
-  CheckCircle,
-  User,
-  MessageSquare,
-  Loader2,
-} from "lucide-react";
-import { SiTelegram } from "react-icons/si";
-import type { About } from "@shared/schema";
-
-const contactFormSchema = z.object({
-  name: z.string().min(2, "Имя должно содержать минимум 2 символа"),
-  subject: z.string().optional(),
-  message: z.string().min(10, "Сообщение должно содержать минимум 10 символов"),
-});
-
-type ContactFormData = z.infer<typeof contactFormSchema>;
+import { ArrowLeft, ExternalLink, Copy, Check } from "lucide-react";
+import { SiTelegram, SiDiscord } from "react-icons/si";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ContactPage() {
   const { toast } = useToast();
-  const [submitted, setSubmitted] = useState(false);
-  const [conversationToken, setConversationToken] = useState<string | null>(null);
+  const [copiedDiscord, setCopiedDiscord] = useState(false);
 
-  const { data: about } = useQuery<About | null>({
-    queryKey: ["/api/about"],
-  });
-
-  const form = useForm<ContactFormData>({
-    resolver: zodResolver(contactFormSchema),
-    defaultValues: {
-      name: "",
-      subject: "",
-      message: "",
-    },
-  });
-
-  const submitMutation = useMutation({
-    mutationFn: async (data: ContactFormData) => {
-      const response = await apiRequest("POST", "/api/contact", data);
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setSubmitted(true);
-      if (data.conversationToken) {
-        setConversationToken(data.conversationToken);
+  const copyDiscord = async () => {
+    const discordNick = "filadelfi";
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(discordNick);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = discordNick;
+        textArea.style.position = "absolute";
+        textArea.style.left = "-999999px";
+        document.body.prepend(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        textArea.remove();
       }
-      form.reset();
-    },
-    onError: () => {
+      setCopiedDiscord(true);
       toast({
-        title: "Ошибка",
-        description: "Не удалось отправить сообщение. Попробуйте позже.",
-        variant: "destructive",
+        title: "Скопировано!",
+        description: "Discord ник скопирован в буфер обмена",
       });
-    },
-  });
-
-  const handleSubmit = (data: ContactFormData) => {
-    submitMutation.mutate(data);
+      setTimeout(() => setCopiedDiscord(false), 2000);
+    } catch {
+      toast({
+        title: "Discord",
+        description: discordNick,
+      });
+    }
   };
+
+  const contacts = [
+    {
+      name: "Telegram",
+      value: "@Filadelfi_lolz",
+      url: "https://t.me/Filadelfi_lolz",
+      icon: SiTelegram,
+      color: "bg-[#0088cc]",
+      shadowColor: "shadow-[#0088cc]/25",
+      hoverShadow: "hover:shadow-[#0088cc]/30",
+    },
+    {
+      name: "Discord",
+      value: "filadelfi",
+      icon: SiDiscord,
+      color: "bg-[#5865F2]",
+      shadowColor: "shadow-[#5865F2]/25",
+      hoverShadow: "hover:shadow-[#5865F2]/30",
+      copyable: true,
+    },
+    {
+      name: "LOLZ.LIVE",
+      value: "Профиль",
+      url: "https://lolz.live/slivi/",
+      icon: ExternalLink,
+      color: "bg-gradient-to-r from-orange-500 to-red-500",
+      shadowColor: "shadow-orange-500/25",
+      hoverShadow: "hover:shadow-orange-500/30",
+    },
+  ];
 
   return (
     <div className="min-h-screen relative">
@@ -138,168 +126,77 @@ export default function ContactPage() {
               </motion.div>
               
               <h1 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">Контакты</h1>
-              <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed mb-8">
-                Есть вопрос или хотите сотрудничать? Напишите мне, и я отвечу в ближайшее время.
-              </p>
-              
-              <motion.a
-                href="https://t.me/filadelfi_lolz"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-[#0088cc] text-white font-medium shadow-lg shadow-[#0088cc]/25 hover:shadow-xl hover:shadow-[#0088cc]/30 transition-all"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                data-testid="link-telegram"
-              >
-                <SiTelegram className="h-5 w-5" />
-                Написать в Telegram
-              </motion.a>
-              
-              <p className="text-muted-foreground text-sm mt-4">
-                @filadelfi_lolz
+              <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed">
+                Свяжитесь со мной любым удобным способом
               </p>
             </div>
 
-            {submitted ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-              >
-                <Card className="glass-card border-green-500/20">
-                  <CardContent className="pt-12 pb-12 text-center">
-                    <motion.div 
-                      className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/20 flex items-center justify-center"
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 1, repeat: Infinity }}
-                    >
-                      <CheckCircle className="h-10 w-10 text-green-500" />
-                    </motion.div>
-                    <h2 className="text-2xl font-bold mb-3">Сообщение отправлено!</h2>
-                    <p className="text-muted-foreground mb-4 text-lg">
-                      Спасибо за ваше сообщение. Я свяжусь с вами в ближайшее время.
-                    </p>
-                    {conversationToken && (
-                      <div className="mb-6 p-4 bg-primary/10 rounded-lg border border-primary/20">
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Сохраните эту ссылку для просмотра ответа:
-                        </p>
-                        <Link href={`/conversation/${conversationToken}`}>
-                          <Button variant="default" className="gap-2" data-testid="button-view-conversation">
-                            <MessageSquare className="h-4 w-4" />
-                            Открыть беседу
-                          </Button>
-                        </Link>
-                      </div>
-                    )}
-                    <Button onClick={() => { setSubmitted(false); setConversationToken(null); }} variant="outline" className="gap-2" data-testid="button-send-another">
-                      <MessageSquare className="h-4 w-4" />
-                      Отправить ещё
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ) : (
-              <Card className="glass-card">
-                <CardHeader className="text-center pb-2">
-                  <CardTitle className="text-2xl flex items-center justify-center gap-3">
-                    <MessageSquare className="h-6 w-6 text-primary" />
-                    Отправить сообщение
-                  </CardTitle>
-                  <CardDescription className="text-base">
-                    Заполните форму ниже, и я отвечу как можно скорее.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-primary" />
-                              Имя
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Ваше имя"
-                                className="bg-background/50"
-                                {...field}
-                                data-testid="input-contact-name"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+            <div className="space-y-4">
+              {contacts.map((contact, index) => (
+                <motion.div
+                  key={contact.name}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + index * 0.1 }}
+                >
+                  <Card className="glass-card overflow-visible">
+                    <CardContent className="p-0">
+                      {contact.copyable ? (
+                        <button
+                          onClick={copyDiscord}
+                          className="w-full flex items-center gap-4 p-6 group cursor-pointer text-left"
+                          data-testid={`contact-${contact.name.toLowerCase()}`}
+                        >
+                          <div className={`p-4 rounded-xl ${contact.color} shadow-lg ${contact.shadowColor} ${contact.hoverShadow} transition-all group-hover:scale-105`}>
+                            <contact.icon className="h-6 w-6 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-lg">{contact.name}</h3>
+                            <p className="text-muted-foreground truncate">{contact.value}</p>
+                          </div>
+                          <div className="flex items-center gap-2 text-muted-foreground group-hover:text-foreground transition-colors">
+                            {copiedDiscord ? (
+                              <Check className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <Copy className="h-5 w-5" />
+                            )}
+                            <span className="text-sm">{copiedDiscord ? "Скопировано" : "Копировать"}</span>
+                          </div>
+                        </button>
+                      ) : (
+                        <a
+                          href={contact.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-4 p-6 group"
+                          data-testid={`contact-${contact.name.toLowerCase()}`}
+                        >
+                          <div className={`p-4 rounded-xl ${contact.color} shadow-lg ${contact.shadowColor} ${contact.hoverShadow} transition-all group-hover:scale-105`}>
+                            <contact.icon className="h-6 w-6 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-lg">{contact.name}</h3>
+                            <p className="text-muted-foreground truncate">{contact.value}</p>
+                          </div>
+                          <ExternalLink className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                        </a>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
 
-                      <FormField
-                        control={form.control}
-                        name="subject"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Тема (необязательно)</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="О чём ваше сообщение?"
-                                className="bg-background/50"
-                                {...field}
-                                data-testid="input-contact-subject"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="message"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="flex items-center gap-2">
-                              <MessageSquare className="h-4 w-4 text-primary" />
-                              Сообщение
-                            </FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Расскажите о вашем проекте или идее..."
-                                rows={6}
-                                className="bg-background/50 resize-none"
-                                {...field}
-                                data-testid="input-contact-message"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <Button
-                        type="submit"
-                        className="w-full glass-button text-primary-foreground gap-2"
-                        size="lg"
-                        disabled={submitMutation.isPending}
-                        data-testid="button-submit-contact"
-                      >
-                        {submitMutation.isPending ? (
-                          <>
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                            Отправка...
-                          </>
-                        ) : (
-                          <>
-                            <Send className="h-5 w-5" />
-                            Отправить сообщение
-                          </>
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-            )}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+              className="text-center mt-12"
+            >
+              <p className="text-muted-foreground text-sm">
+                Отвечаю в течение 24 часов
+              </p>
+            </motion.div>
           </motion.div>
         </div>
       </main>
