@@ -1,29 +1,37 @@
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import connectPg from "connect-pg-simple";
-
-const ADMIN_CREDENTIALS = {
-  username: "Filadelfi",
-  password: "Filadelfipasswordexecute"
-};
+import createMemoryStore from "memorystore";
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
-  const pgStore = connectPg(session);
-  const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
-    ttl: sessionTtl,
-    tableName: "sessions",
-  });
+  const isProduction = process.env.NODE_ENV === "production";
+  
+  let sessionStore;
+  
+  if (process.env.DATABASE_URL) {
+    const pgStore = connectPg(session);
+    sessionStore = new pgStore({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: true,
+      ttl: sessionTtl,
+      tableName: "sessions",
+    });
+  } else {
+    const MemoryStore = createMemoryStore(session);
+    sessionStore = new MemoryStore({
+      checkPeriod: sessionTtl,
+    });
+  }
+  
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.SESSION_SECRET || "dev-secret-change-in-production",
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: isProduction,
       maxAge: sessionTtl,
     },
   });
@@ -36,14 +44,17 @@ export async function setupAuth(app: Express) {
   app.post("/api/login", (req, res) => {
     const { username, password } = req.body;
     
-    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+    const adminUsername = process.env.ADMIN_USERNAME || "Filadelfi";
+    const adminPassword = process.env.ADMIN_PASSWORD || "Filadelfipasswordexecute";
+    
+    if (username === adminUsername && password === adminPassword) {
       (req.session as any).user = {
         id: "admin",
-        username: ADMIN_CREDENTIALS.username,
+        username: adminUsername,
         isAdmin: true,
         isAuthenticated: true
       };
-      res.json({ success: true, user: { username: ADMIN_CREDENTIALS.username, isAdmin: true } });
+      res.json({ success: true, user: { username: adminUsername, isAdmin: true } });
     } else {
       res.status(401).json({ success: false, message: "Неверный логин или пароль" });
     }
