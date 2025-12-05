@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import lolzIcon from "@assets/three_avatar_1764907826167.webp";
 
 interface IconProps {
   className?: string;
@@ -502,12 +503,11 @@ export function LolzLiveIcon({ className = "", size = 24 }: IconProps) {
 export function LolzIcon({ className = "", size = 24 }: { className?: string; size?: number }) {
   return (
     <img 
-      src="https://lolz.live/public/brand/favicon.svg"
+      src={lolzIcon}
       alt="LOLZ"
       width={size}
       height={size}
-      className={className}
-      style={{ filter: 'brightness(0) invert(1)' }}
+      className={`${className} rounded-sm`}
     />
   );
 }

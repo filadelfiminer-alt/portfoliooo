@@ -122,7 +122,7 @@ export default function Admin() {
   const [aboutPhotoUrl, setAboutPhotoUrl] = useState<string>("");
   const [galleryUrlInput, setGalleryUrlInput] = useState("");
   const [imageLoadError, setImageLoadError] = useState(false);
-  const [imageLoading, setImageLoading] = useState(true);
+  const [imageLoading, setImageLoading] = useState(false);
 
   const { data: projects = [], isLoading } = useQuery<Project[]>({
     queryKey: ["/api/admin/projects"],
@@ -551,9 +551,10 @@ export default function Admin() {
       featured: project.featured || false,
       published: project.published ?? true,
     });
+    const hasImage = !!project.imageUrl;
     setUploadedImageUrl(project.imageUrl || "");
     setImageLoadError(false);
-    setImageLoading(!!project.imageUrl);
+    setImageLoading(hasImage);
     
     try {
       const response = await fetch(`/api/projects/${project.id}/images`);
@@ -637,7 +638,7 @@ export default function Admin() {
     setUploadedImageUrl("");
     setProjectImages([]);
     setImageLoadError(false);
-    setImageLoading(true);
+    setImageLoading(false);
   };
 
   const handleGalleryUploadComplete = async (result: any) => {
@@ -809,6 +810,8 @@ export default function Admin() {
                         setEditingProject(null);
                         form.reset();
                         setUploadedImageUrl("");
+                        setImageLoadError(false);
+                        setImageLoading(false);
                         setIsDialogOpen(true);
                       }}
                       data-testid="button-add-project"
@@ -833,35 +836,46 @@ export default function Admin() {
                             <Label>Изображение проекта</Label>
                             {uploadedImageUrl ? (
                               <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
-                                {imageLoading && !imageLoadError && (
-                                  <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground animate-pulse">
-                                    <Image className="h-12 w-12 mb-2" />
-                                    <span className="text-sm">Загрузка изображения...</span>
-                                  </div>
-                                )}
-                                {imageLoadError && (
-                                  <div className="flex flex-col items-center justify-center w-full h-full text-muted-foreground">
-                                    <Image className="h-12 w-12 mb-2" />
-                                    <span className="text-sm">Не удалось загрузить изображение</span>
-                                    <span className="text-xs mt-1 text-center px-4">
-                                      URL сохранён, но превью недоступно
-                                    </span>
-                                  </div>
-                                )}
                                 <img
+                                  key={uploadedImageUrl}
                                   src={uploadedImageUrl}
                                   alt="Предпросмотр проекта"
-                                  className={`w-full h-full object-cover ${imageLoading || imageLoadError ? 'opacity-0 absolute' : ''}`}
-                                  referrerPolicy="no-referrer"
-                                  onError={() => {
-                                    setImageLoading(false);
-                                    setImageLoadError(true);
+                                  className="w-full h-full object-cover"
+                                  crossOrigin="anonymous"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    if (!target.dataset.retried) {
+                                      target.dataset.retried = "true";
+                                      target.crossOrigin = "";
+                                      target.src = uploadedImageUrl;
+                                    } else {
+                                      setImageLoading(false);
+                                      setImageLoadError(true);
+                                    }
                                   }}
                                   onLoad={() => {
                                     setImageLoading(false);
                                     setImageLoadError(false);
                                   }}
+                                  style={{ 
+                                    display: imageLoadError ? 'none' : 'block'
+                                  }}
                                 />
+                                {imageLoading && !imageLoadError && (
+                                  <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground bg-muted animate-pulse">
+                                    <Image className="h-12 w-12 mb-2" />
+                                    <span className="text-sm">Загрузка...</span>
+                                  </div>
+                                )}
+                                {imageLoadError && (
+                                  <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground bg-muted">
+                                    <Image className="h-12 w-12 mb-2" />
+                                    <span className="text-sm">Не удалось загрузить превью</span>
+                                    <span className="text-xs mt-1 text-center px-4 text-muted-foreground/70">
+                                      URL: {uploadedImageUrl.substring(0, 40)}...
+                                    </span>
+                                  </div>
+                                )}
                                 <Button
                                   type="button"
                                   variant="destructive"
@@ -871,7 +885,7 @@ export default function Admin() {
                                     setUploadedImageUrl("");
                                     form.setValue("imageUrl", "");
                                     setImageLoadError(false);
-                                    setImageLoading(true);
+                                    setImageLoading(false);
                                   }}
                                 >
                                   <X className="h-4 w-4" />
