@@ -1,0 +1,96 @@
+{
+  "colorScheme": "dark",
+  "fonts": [
+    {
+      "family": "Open Sans",
+      "role": "body"
+    },
+    {
+      "family": "Helvetica Neue",
+      "role": "body"
+    },
+    {
+      "family": "-apple-system",
+      "role": "body"
+    },
+    {
+      "family": "BlinkMacSystemFont",
+      "role": "body"
+    },
+    {
+      "family": "sans-serif",
+      "role": "body"
+    }
+  ],
+  "colors": {
+    "primary": "#00BA78",
+    "accent": "#228E5D",
+    "background": "#272727",
+    "textPrimary": "#FFFFFF",
+    "link": "#228E5D"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Open Sans",
+      "heading": "Open Sans"
+    },
+    "fontStacks": {
+      "heading": [
+        "-apple-system",
+        "BlinkMacSystemFont",
+        "Open Sans",
+        "Helvetica Neue",
+        "sans-serif"
+      ],
+      "body": [
+        "-apple-system",
+        "BlinkMacSystemFont",
+        "Open Sans",
+        "Helvetica Neue",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "-apple-system",
+        "BlinkMacSystemFont",
+        "Open Sans",
+        "Helvetica Neue",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "13px",
+      "h2": "13px",
+      "body": "13px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "8px"
+  },
+  "components": {
+    "input": {
+      "borderColor": "#CCCCCC",
+      "borderRadius": "8px"
+    }
+  },
+  "images": {
+    "logo": "File saved at: attached_assets/logo.webp",
+    "favicon": "https://lolz.live/public/brand/favicon.svg",
+    "ogImage": "https://lolz.live/public/brand/apple-touch-icon-180x180.png?1=1"
+  },
+  "__framework_hints": [],
+  "personality": {
+    "tone": "playful",
+    "energy": "high",
+    "targetAudience": "young adults and gamers"
+  },
+  "designSystem": {
+    "framework": "unknown",
+    "componentLibrary": null
+  },
+  "confidence": {
+    "buttons": 0.9,
+    "colors": 0.95,
+    "overall": 0.925
+  }
+}
