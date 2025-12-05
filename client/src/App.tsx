@@ -12,6 +12,7 @@ import Admin from "@/pages/Admin";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import Login from "@/pages/Login";
+import Conversation from "@/pages/Conversation";
 
 function Router() {
   const { isLoading } = useAuth();
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/contact" component={Contact} />
       <Route path="/login" component={Login} />
       <Route path="/admin" component={Admin} />
+      <Route path="/conversation/:token" component={Conversation} />
       <Route component={NotFound} />
     </Switch>
   );

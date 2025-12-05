@@ -27,6 +27,12 @@ export async function registerRoutes(
     }
   });
 
+  // Check if object storage is available
+  app.get("/api/storage/status", async (req, res) => {
+    const hasObjectStorage = !!(process.env.PRIVATE_OBJECT_DIR && process.env.PUBLIC_OBJECT_SEARCH_PATHS);
+    res.json({ available: hasObjectStorage });
+  });
+
   // Object storage routes
   app.get("/public-objects/:filePath(*)", async (req, res) => {
     const filePath = req.params.filePath;
@@ -258,7 +264,11 @@ export async function registerRoutes(
     try {
       const validatedData = insertContactMessageSchema.parse(req.body);
       const message = await storage.createContactMessage(validatedData);
-      res.status(201).json({ success: true, id: message.id });
+      res.status(201).json({ 
+        success: true, 
+        id: message.id,
+        conversationToken: message.conversationToken,
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
@@ -340,6 +350,92 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting message:", error);
       res.status(500).json({ message: "Failed to delete message" });
+    }
+  });
+
+  // Public conversation routes - for users to view their messages
+  // Only returns sanitized public-facing data
+  app.get("/api/conversation/:token", async (req, res) => {
+    try {
+      const message = await storage.getMessageByConversationToken(req.params.token);
+      if (!message) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+      
+      // Get conversation replies
+      const replies = await storage.getConversationReplies(message.id);
+      
+      // Check if user can reply
+      const canReply = await storage.canUserReply(req.params.token);
+      
+      // Return only the original message (first part before any delimiter for backwards compatibility)
+      const originalMessage = message.message.split("\n\n---\n")[0];
+      
+      res.json({
+        name: message.name,
+        subject: message.subject,
+        originalMessage: originalMessage,
+        hasReply: !!message.reply,
+        adminReply: message.reply,
+        repliedAt: message.repliedAt,
+        createdAt: message.createdAt,
+        replies: replies.map(r => ({
+          id: r.id,
+          authorType: r.authorType,
+          content: r.content,
+          createdAt: r.createdAt,
+        })),
+        canReply: canReply.allowed,
+        replyBlockedReason: canReply.reason,
+      });
+    } catch (error) {
+      console.error("Error fetching conversation:", error);
+      res.status(500).json({ message: "Failed to fetch conversation" });
+    }
+  });
+
+  // User reply to conversation - with rate limiting
+  app.post("/api/conversation/:token/reply", async (req, res) => {
+    try {
+      const { message: userMessage } = req.body;
+      
+      // Validate input
+      if (!userMessage || typeof userMessage !== 'string') {
+        return res.status(400).json({ message: "Текст сообщения обязателен" });
+      }
+      
+      const trimmedMessage = userMessage.trim();
+      if (trimmedMessage.length === 0) {
+        return res.status(400).json({ message: "Сообщение не может быть пустым" });
+      }
+      
+      if (trimmedMessage.length > 2000) {
+        return res.status(400).json({ message: "Сообщение слишком длинное (максимум 2000 символов)" });
+      }
+      
+      // Check if user can reply
+      const canReply = await storage.canUserReply(req.params.token);
+      if (!canReply.allowed) {
+        return res.status(429).json({ message: canReply.reason });
+      }
+      
+      // Get message to find its ID
+      const message = await storage.getMessageByConversationToken(req.params.token);
+      if (!message) {
+        return res.status(404).json({ message: "Беседа не найдена" });
+      }
+      
+      // Add the reply
+      await storage.addConversationReply({
+        messageId: message.id,
+        authorType: 'user',
+        content: trimmedMessage,
+      });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error adding user reply:", error);
+      res.status(500).json({ message: "Не удалось отправить ответ" });
     }
   });
 

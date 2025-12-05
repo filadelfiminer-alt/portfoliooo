@@ -5,6 +5,7 @@ import {
   contactMessages,
   projectImages,
   siteSettings,
+  conversationReplies,
   type User,
   type UpsertUser,
   type Project,
@@ -17,6 +18,8 @@ import {
   type InsertProjectImage,
   type SiteSettings,
   type InsertSiteSettings,
+  type ConversationReply,
+  type InsertConversationReply,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc } from "drizzle-orm";
@@ -36,10 +39,15 @@ export interface IStorage {
   upsertAboutContent(about: InsertAbout): Promise<About>;
   
   getContactMessages(): Promise<ContactMessage[]>;
+  getMessageByConversationToken(token: string): Promise<ContactMessage | undefined>;
   createContactMessage(message: InsertContactMessage): Promise<ContactMessage>;
   markMessageAsRead(id: string): Promise<ContactMessage | undefined>;
   replyToMessage(id: string, reply: string): Promise<ContactMessage | undefined>;
   deleteContactMessage(id: string): Promise<boolean>;
+  
+  getConversationReplies(messageId: string): Promise<ConversationReply[]>;
+  addConversationReply(reply: InsertConversationReply): Promise<ConversationReply>;
+  canUserReply(token: string): Promise<{ allowed: boolean; reason?: string }>;
   
   getProjectImages(projectId: string): Promise<ProjectImage[]>;
   addProjectImage(image: InsertProjectImage): Promise<ProjectImage>;
@@ -157,9 +165,22 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(contactMessages.createdAt));
   }
 
+  async getMessageByConversationToken(token: string): Promise<ContactMessage | undefined> {
+    if (!db) throw new Error("Database not available");
+    const [message] = await db
+      .select()
+      .from(contactMessages)
+      .where(eq(contactMessages.conversationToken, token));
+    return message;
+  }
+
   async createContactMessage(message: InsertContactMessage): Promise<ContactMessage> {
     if (!db) throw new Error("Database not available");
-    const [created] = await db.insert(contactMessages).values(message).returning();
+    const conversationToken = generateConversationToken();
+    const [created] = await db.insert(contactMessages).values({
+      ...message,
+      conversationToken,
+    }).returning();
     return created;
   }
 
@@ -188,6 +209,67 @@ export class DatabaseStorage implements IStorage {
     const result = await db.delete(contactMessages).where(eq(contactMessages.id, id)).returning();
     return result.length > 0;
   }
+
+  async getConversationReplies(messageId: string): Promise<ConversationReply[]> {
+    if (!db) throw new Error("Database not available");
+    return await db
+      .select()
+      .from(conversationReplies)
+      .where(eq(conversationReplies.messageId, messageId))
+      .orderBy(asc(conversationReplies.createdAt));
+  }
+
+  async addConversationReply(reply: InsertConversationReply): Promise<ConversationReply> {
+    if (!db) throw new Error("Database not available");
+    
+    // Update user reply count and timestamp for user replies
+    if (reply.authorType === 'user') {
+      const [message] = await db.select().from(contactMessages).where(eq(contactMessages.id, reply.messageId));
+      const currentCount = message?.userReplyCount || 0;
+      
+      await db
+        .update(contactMessages)
+        .set({ 
+          userReplyCount: currentCount + 1,
+          lastUserReplyAt: new Date(),
+          isRead: false,
+        })
+        .where(eq(contactMessages.id, reply.messageId));
+    }
+    
+    const [created] = await db.insert(conversationReplies).values(reply).returning();
+    return created;
+  }
+
+  async canUserReply(token: string): Promise<{ allowed: boolean; reason?: string }> {
+    if (!db) throw new Error("Database not available");
+    const message = await this.getMessageByConversationToken(token);
+    if (!message) {
+      return { allowed: false, reason: "Беседа не найдена" };
+    }
+    
+    // Must have admin reply first
+    if (!message.reply) {
+      return { allowed: false, reason: "Дождитесь ответа администратора" };
+    }
+    
+    // Rate limiting: max 5 user replies
+    const userReplyCount = message.userReplyCount || 0;
+    if (userReplyCount >= 5) {
+      return { allowed: false, reason: "Достигнут лимит ответов" };
+    }
+    
+    // Rate limiting: 1 minute between replies
+    if (message.lastUserReplyAt) {
+      const timeSinceLastReply = Date.now() - message.lastUserReplyAt.getTime();
+      if (timeSinceLastReply < 60000) {
+        return { allowed: false, reason: "Подождите минуту перед следующим ответом" };
+      }
+    }
+    
+    return { allowed: true };
+  }
+
 
   async getProjectImages(projectId: string): Promise<ProjectImage[]> {
     if (!db) throw new Error("Database not available");
@@ -248,11 +330,21 @@ function generateId(): string {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
 
+function generateConversationToken(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let token = '';
+  for (let i = 0; i < 32; i++) {
+    token += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return token;
+}
+
 export class MemStorage implements IStorage {
   private users: Map<string, User> = new Map();
   private projects: Map<string, Project> = new Map();
   private aboutContentData: About | undefined;
   private contactMessagesData: Map<string, ContactMessage> = new Map();
+  private conversationRepliesData: Map<string, ConversationReply> = new Map();
   private projectImagesData: Map<string, ProjectImage> = new Map();
   private siteSettingsData: SiteSettings | undefined;
 
@@ -388,16 +480,28 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getMessageByConversationToken(token: string): Promise<ContactMessage | undefined> {
+    for (const message of this.contactMessagesData.values()) {
+      if (message.conversationToken === token) {
+        return message;
+      }
+    }
+    return undefined;
+  }
+
   async createContactMessage(messageData: InsertContactMessage): Promise<ContactMessage> {
     const message: ContactMessage = {
       id: generateId(),
       name: messageData.name,
-      email: messageData.email,
+      email: messageData.email || null,
       subject: messageData.subject || null,
       message: messageData.message,
       isRead: false,
-      reply: messageData.reply || null,
-      repliedAt: messageData.repliedAt || null,
+      reply: null,
+      repliedAt: null,
+      conversationToken: generateConversationToken(),
+      userReplyCount: 0,
+      lastUserReplyAt: null,
       createdAt: new Date(),
     };
     this.contactMessagesData.set(message.id, message);
@@ -426,6 +530,65 @@ export class MemStorage implements IStorage {
 
   async deleteContactMessage(id: string): Promise<boolean> {
     return this.contactMessagesData.delete(id);
+  }
+
+  async getConversationReplies(messageId: string): Promise<ConversationReply[]> {
+    return Array.from(this.conversationRepliesData.values())
+      .filter(reply => reply.messageId === messageId)
+      .sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
+  }
+
+  async addConversationReply(replyData: InsertConversationReply): Promise<ConversationReply> {
+    const reply: ConversationReply = {
+      id: generateId(),
+      messageId: replyData.messageId,
+      authorType: replyData.authorType,
+      content: replyData.content,
+      createdAt: new Date(),
+    };
+    this.conversationRepliesData.set(reply.id, reply);
+    
+    // Update user reply count for user replies
+    if (replyData.authorType === 'user') {
+      const message = Array.from(this.contactMessagesData.values())
+        .find(m => m.id === replyData.messageId);
+      if (message) {
+        message.userReplyCount = (message.userReplyCount || 0) + 1;
+        message.lastUserReplyAt = new Date();
+        message.isRead = false;
+        this.contactMessagesData.set(message.id, message);
+      }
+    }
+    
+    return reply;
+  }
+
+  async canUserReply(token: string): Promise<{ allowed: boolean; reason?: string }> {
+    const message = await this.getMessageByConversationToken(token);
+    if (!message) {
+      return { allowed: false, reason: "Беседа не найдена" };
+    }
+    
+    // Must have admin reply first
+    if (!message.reply) {
+      return { allowed: false, reason: "Дождитесь ответа администратора" };
+    }
+    
+    // Rate limiting: max 5 user replies
+    const userReplyCount = message.userReplyCount || 0;
+    if (userReplyCount >= 5) {
+      return { allowed: false, reason: "Достигнут лимит ответов" };
+    }
+    
+    // Rate limiting: 1 minute between replies
+    if (message.lastUserReplyAt) {
+      const timeSinceLastReply = Date.now() - message.lastUserReplyAt.getTime();
+      if (timeSinceLastReply < 60000) {
+        return { allowed: false, reason: "Подождите минуту перед следующим ответом" };
+      }
+    }
+    
+    return { allowed: true };
   }
 
   async getProjectImages(projectId: string): Promise<ProjectImage[]> {

@@ -127,6 +127,7 @@ export default function Admin() {
   const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
   const [replyingToMessage, setReplyingToMessage] = useState<ContactMessage | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [galleryUrlInput, setGalleryUrlInput] = useState("");
 
   const { data: projects = [], isLoading } = useQuery<Project[]>({
     queryKey: ["/api/admin/projects"],
@@ -145,6 +146,13 @@ export default function Admin() {
   const { data: siteSettings } = useQuery<SiteSettings>({
     queryKey: ["/api/site-settings"],
   });
+
+  const { data: storageStatus } = useQuery<{ available: boolean }>({
+    queryKey: ["/api/storage/status"],
+    enabled: !!user?.isAdmin,
+  });
+
+  const hasObjectStorage = storageStatus?.available ?? true;
 
   const initialSyncRef = useRef(false);
   
@@ -739,6 +747,16 @@ export default function Admin() {
     }
   };
 
+  const handleGalleryUrlAdd = () => {
+    if (galleryUrlInput.trim() && editingProject) {
+      addProjectImageMutation.mutate({
+        projectId: editingProject.id,
+        imageUrl: galleryUrlInput.trim(),
+      });
+      setGalleryUrlInput("");
+    }
+  };
+
   const handleExpandMessage = (message: ContactMessage) => {
     if (expandedMessageId === message.id) {
       setExpandedMessageId(null);
@@ -940,7 +958,7 @@ export default function Admin() {
                                   <X className="h-4 w-4" />
                                 </Button>
                               </div>
-                            ) : (
+                            ) : hasObjectStorage ? (
                               <div className="w-full">
                                 <ObjectUploader
                                   maxNumberOfFiles={1}
@@ -957,6 +975,21 @@ export default function Admin() {
                                     </span>
                                   </div>
                                 </ObjectUploader>
+                              </div>
+                            ) : (
+                              <div className="w-full space-y-2">
+                                <Input
+                                  placeholder="Вставьте URL изображения (например, с Cloudinary, ImgBB)"
+                                  value={form.watch("imageUrl") || ""}
+                                  onChange={(e) => {
+                                    form.setValue("imageUrl", e.target.value);
+                                    setUploadedImageUrl(e.target.value);
+                                  }}
+                                  data-testid="input-project-image-url"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                  Загрузите изображение на внешний хостинг и вставьте ссылку
+                                </p>
                               </div>
                             )}
                           </div>
@@ -1207,21 +1240,46 @@ export default function Admin() {
                                   </div>
                                 ))}
                               </div>
-                              <ObjectUploader
-                                maxNumberOfFiles={1}
-                                maxFileSize={10485760}
-                                onGetUploadParameters={handleGetUploadParameters}
-                                onComplete={handleGalleryUploadComplete}
-                                buttonVariant="outline"
-                                buttonClassName="w-full h-20 border-dashed"
-                              >
-                                <div className="flex flex-col items-center gap-1">
-                                  <Plus className="h-5 w-5 text-muted-foreground" />
-                                  <span className="text-xs text-muted-foreground">
-                                    Добавить фото
-                                  </span>
+                              {hasObjectStorage ? (
+                                <ObjectUploader
+                                  maxNumberOfFiles={1}
+                                  maxFileSize={10485760}
+                                  onGetUploadParameters={handleGetUploadParameters}
+                                  onComplete={handleGalleryUploadComplete}
+                                  buttonVariant="outline"
+                                  buttonClassName="w-full h-20 border-dashed"
+                                >
+                                  <div className="flex flex-col items-center gap-1">
+                                    <Plus className="h-5 w-5 text-muted-foreground" />
+                                    <span className="text-xs text-muted-foreground">
+                                      Добавить фото
+                                    </span>
+                                  </div>
+                                </ObjectUploader>
+                              ) : (
+                                <div className="flex gap-2">
+                                  <Input
+                                    placeholder="URL изображения"
+                                    value={galleryUrlInput}
+                                    onChange={(e) => setGalleryUrlInput(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleGalleryUrlAdd();
+                                      }
+                                    }}
+                                    data-testid="input-gallery-image-url"
+                                  />
+                                  <Button
+                                    type="button"
+                                    onClick={handleGalleryUrlAdd}
+                                    disabled={!galleryUrlInput.trim()}
+                                    data-testid="button-add-gallery-url"
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                  </Button>
                                 </div>
-                              </ObjectUploader>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1474,7 +1532,7 @@ export default function Admin() {
                               <X className="h-4 w-4" />
                             </Button>
                           </div>
-                        ) : (
+                        ) : hasObjectStorage ? (
                           <div className="w-32">
                             <ObjectUploader
                               maxNumberOfFiles={1}
@@ -1491,6 +1549,22 @@ export default function Admin() {
                                 </span>
                               </div>
                             </ObjectUploader>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <Input
+                              placeholder="Вставьте URL фото (например, с Cloudinary, ImgBB)"
+                              value={aboutForm.watch("photoUrl") || ""}
+                              onChange={(e) => {
+                                aboutForm.setValue("photoUrl", e.target.value);
+                                setAboutPhotoUrl(e.target.value);
+                              }}
+                              className="w-full"
+                              data-testid="input-about-photo-url"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Загрузите фото на внешний хостинг и вставьте ссылку
+                            </p>
                           </div>
                         )}
                       </div>

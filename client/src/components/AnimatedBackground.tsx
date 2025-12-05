@@ -55,6 +55,11 @@ export function AnimatedBackground() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Initialize particles if not already done
+    if (particlesRef.current.length === 0) {
+      initParticles();
+    }
+
     let animationId: number;
     let time = 0;
 
@@ -65,11 +70,12 @@ export function AnimatedBackground() {
     resize();
     window.addEventListener('resize', resize);
 
-    const isDark = document.documentElement.classList.contains('dark');
-
     const animate = () => {
       time += 0.005;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Check dark mode on each frame for proper theme switching
+      const isDark = document.documentElement.classList.contains('dark');
 
       const mouseX = mousePos.x * canvas.width;
       const mouseY = mousePos.y * canvas.height;
@@ -174,7 +180,7 @@ export function AnimatedBackground() {
       cancelAnimationFrame(animationId);
       window.removeEventListener('resize', resize);
     };
-  }, [mousePos]);
+  }, [mousePos, initParticles]);
 
   if (!mounted) return null;
 

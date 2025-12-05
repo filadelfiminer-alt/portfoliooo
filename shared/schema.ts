@@ -88,12 +88,24 @@ export const aboutContent = pgTable("about_content", {
 export const contactMessages = pgTable("contact_messages", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }),
   subject: varchar("subject", { length: 500 }),
   message: text("message").notNull(),
   isRead: boolean("is_read").default(false),
   reply: text("reply"),
   repliedAt: timestamp("replied_at"),
+  conversationToken: varchar("conversation_token", { length: 64 }),
+  userReplyCount: integer("user_reply_count").default(0),
+  lastUserReplyAt: timestamp("last_user_reply_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Conversation replies table for secure message threading
+export const conversationReplies = pgTable("conversation_replies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  messageId: varchar("message_id").references(() => contactMessages.id, { onDelete: "cascade" }).notNull(),
+  authorType: varchar("author_type", { length: 10 }).notNull(), // 'user' or 'admin'
+  content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -154,9 +166,21 @@ export const insertContactMessageSchema = createInsertSchema(contactMessages).om
   id: true,
   createdAt: true,
   isRead: true,
+  conversationToken: true,
+  reply: true,
+  repliedAt: true,
+  userReplyCount: true,
+  lastUserReplyAt: true,
 });
 export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
 export type ContactMessage = typeof contactMessages.$inferSelect;
+
+export const insertConversationReplySchema = createInsertSchema(conversationReplies).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertConversationReply = z.infer<typeof insertConversationReplySchema>;
+export type ConversationReply = typeof conversationReplies.$inferSelect;
 
 export const insertProjectImageSchema = createInsertSchema(projectImages).omit({
   id: true,

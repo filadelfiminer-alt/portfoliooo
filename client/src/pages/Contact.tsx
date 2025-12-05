@@ -30,7 +30,6 @@ import {
   Send,
   ArrowLeft,
   CheckCircle,
-  Mail,
   User,
   MessageSquare,
   Loader2,
@@ -40,7 +39,6 @@ import type { About } from "@shared/schema";
 
 const contactFormSchema = z.object({
   name: z.string().min(2, "Имя должно содержать минимум 2 символа"),
-  email: z.string().email("Введите корректный email"),
   subject: z.string().optional(),
   message: z.string().min(10, "Сообщение должно содержать минимум 10 символов"),
 });
@@ -50,6 +48,7 @@ type ContactFormData = z.infer<typeof contactFormSchema>;
 export default function ContactPage() {
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const [conversationToken, setConversationToken] = useState<string | null>(null);
 
   const { data: about } = useQuery<About | null>({
     queryKey: ["/api/about"],
@@ -59,7 +58,6 @@ export default function ContactPage() {
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
       name: "",
-      email: "",
       subject: "",
       message: "",
     },
@@ -67,10 +65,14 @@ export default function ContactPage() {
 
   const submitMutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
-      return apiRequest("POST", "/api/contact", data);
+      const response = await apiRequest("POST", "/api/contact", data);
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setSubmitted(true);
+      if (data.conversationToken) {
+        setConversationToken(data.conversationToken);
+      }
       form.reset();
     },
     onError: () => {
@@ -173,10 +175,23 @@ export default function ContactPage() {
                       <CheckCircle className="h-10 w-10 text-green-500" />
                     </motion.div>
                     <h2 className="text-2xl font-bold mb-3">Сообщение отправлено!</h2>
-                    <p className="text-muted-foreground mb-8 text-lg">
+                    <p className="text-muted-foreground mb-4 text-lg">
                       Спасибо за ваше сообщение. Я свяжусь с вами в ближайшее время.
                     </p>
-                    <Button onClick={() => setSubmitted(false)} variant="outline" className="gap-2" data-testid="button-send-another">
+                    {conversationToken && (
+                      <div className="mb-6 p-4 bg-primary/10 rounded-lg border border-primary/20">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Сохраните эту ссылку для просмотра ответа:
+                        </p>
+                        <Link href={`/conversation/${conversationToken}`}>
+                          <Button variant="default" className="gap-2" data-testid="button-view-conversation">
+                            <MessageSquare className="h-4 w-4" />
+                            Открыть беседу
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                    <Button onClick={() => { setSubmitted(false); setConversationToken(null); }} variant="outline" className="gap-2" data-testid="button-send-another">
                       <MessageSquare className="h-4 w-4" />
                       Отправить ещё
                     </Button>
@@ -197,52 +212,27 @@ export default function ContactPage() {
                 <CardContent className="pt-6">
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="flex items-center gap-2">
-                                <User className="h-4 w-4 text-primary" />
-                                Имя
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Ваше имя"
-                                  className="bg-background/50"
-                                  {...field}
-                                  data-testid="input-contact-name"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="flex items-center gap-2">
-                                <Mail className="h-4 w-4 text-primary" />
-                                Email
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="email"
-                                  placeholder="ваш@email.com"
-                                  className="bg-background/50"
-                                  {...field}
-                                  data-testid="input-contact-email"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-primary" />
+                              Имя
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Ваше имя"
+                                className="bg-background/50"
+                                {...field}
+                                data-testid="input-contact-name"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
                       <FormField
                         control={form.control}
