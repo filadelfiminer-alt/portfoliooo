@@ -180,7 +180,7 @@ export function AnimatedBackground() {
       cancelAnimationFrame(animationId);
       window.removeEventListener('resize', resize);
     };
-  }, [mousePos, initParticles]);
+  }, [mousePos, initParticles, mounted]);
 
   if (!mounted) return null;
 

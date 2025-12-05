@@ -3,12 +3,13 @@ import { AnimatedBackground } from "@/components/AnimatedBackground";
 import {
   CreativeSparkIcon,
   ContactEnvelopeIcon,
+  LolzIcon,
 } from "@/components/CustomIcons";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { ArrowLeft, ExternalLink, Copy, Check, Flame } from "lucide-react";
+import { ArrowLeft, ExternalLink, Copy, Check } from "lucide-react";
 import { SiTelegram, SiDiscord } from "react-icons/si";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -69,7 +70,7 @@ export default function ContactPage() {
       name: "LOLZ.LIVE",
       value: "Профиль",
       url: "https://lolz.live/slivi/",
-      icon: Flame,
+      icon: LolzIcon,
       color: "bg-gradient-to-r from-green-500 to-emerald-600",
       shadowColor: "shadow-green-500/25",
       hoverShadow: "hover:shadow-green-500/30",

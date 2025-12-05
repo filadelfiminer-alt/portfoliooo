@@ -121,6 +121,8 @@ export default function Admin() {
   const [projectImages, setProjectImages] = useState<ProjectImage[]>([]);
   const [aboutPhotoUrl, setAboutPhotoUrl] = useState<string>("");
   const [galleryUrlInput, setGalleryUrlInput] = useState("");
+  const [imageLoadError, setImageLoadError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
 
   const { data: projects = [], isLoading } = useQuery<Project[]>({
     queryKey: ["/api/admin/projects"],
@@ -550,6 +552,8 @@ export default function Admin() {
       published: project.published ?? true,
     });
     setUploadedImageUrl(project.imageUrl || "");
+    setImageLoadError(false);
+    setImageLoading(!!project.imageUrl);
     
     try {
       const response = await fetch(`/api/projects/${project.id}/images`);
@@ -632,6 +636,8 @@ export default function Admin() {
     form.reset();
     setUploadedImageUrl("");
     setProjectImages([]);
+    setImageLoadError(false);
+    setImageLoading(true);
   };
 
   const handleGalleryUploadComplete = async (result: any) => {
@@ -827,19 +833,45 @@ export default function Admin() {
                             <Label>Изображение проекта</Label>
                             {uploadedImageUrl ? (
                               <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
+                                {imageLoading && !imageLoadError && (
+                                  <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground animate-pulse">
+                                    <Image className="h-12 w-12 mb-2" />
+                                    <span className="text-sm">Загрузка изображения...</span>
+                                  </div>
+                                )}
+                                {imageLoadError && (
+                                  <div className="flex flex-col items-center justify-center w-full h-full text-muted-foreground">
+                                    <Image className="h-12 w-12 mb-2" />
+                                    <span className="text-sm">Не удалось загрузить изображение</span>
+                                    <span className="text-xs mt-1 text-center px-4">
+                                      URL сохранён, но превью недоступно
+                                    </span>
+                                  </div>
+                                )}
                                 <img
                                   src={uploadedImageUrl}
                                   alt="Предпросмотр проекта"
-                                  className="w-full h-full object-cover"
+                                  className={`w-full h-full object-cover ${imageLoading || imageLoadError ? 'opacity-0 absolute' : ''}`}
+                                  referrerPolicy="no-referrer"
+                                  onError={() => {
+                                    setImageLoading(false);
+                                    setImageLoadError(true);
+                                  }}
+                                  onLoad={() => {
+                                    setImageLoading(false);
+                                    setImageLoadError(false);
+                                  }}
                                 />
                                 <Button
                                   type="button"
                                   variant="destructive"
                                   size="icon"
-                                  className="absolute top-2 right-2"
+                                  className="absolute top-2 right-2 z-10"
                                   onClick={() => {
                                     setUploadedImageUrl("");
                                     form.setValue("imageUrl", "");
+                                    setImageLoadError(false);
+                                    setImageLoading(true);
                                   }}
                                 >
                                   <X className="h-4 w-4" />
@@ -879,6 +911,8 @@ export default function Admin() {
                                       const url = e.target.value;
                                       form.setValue("imageUrl", url);
                                       if (url.trim()) {
+                                        setImageLoadError(false);
+                                        setImageLoading(true);
                                         setUploadedImageUrl(url);
                                       }
                                     }}
@@ -892,6 +926,8 @@ export default function Admin() {
                                       onClick={() => {
                                         const url = form.watch("imageUrl") || "";
                                         if (url.trim()) {
+                                          setImageLoadError(false);
+                                          setImageLoading(true);
                                           setUploadedImageUrl(url.trim());
                                           toast({ title: "Изображение загружено" });
                                         }

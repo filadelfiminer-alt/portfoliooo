@@ -467,6 +467,51 @@ export function TrashIcon({ className = "", size = 24, animate = true }: IconPro
   );
 }
 
+export function LolzLiveIcon({ className = "", size = 24 }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+    >
+      <path
+        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
+        fill="currentColor"
+        fillOpacity="0.3"
+      />
+      <path
+        d="M12 6v6l4 2"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" fill="none" />
+      <path
+        d="M9 9l6 6M15 9l-6 6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function LolzIcon({ className = "", size = 24 }: { className?: string; size?: number }) {
+  return (
+    <img 
+      src="https://lolz.live/public/brand/favicon.svg"
+      alt="LOLZ"
+      width={size}
+      height={size}
+      className={className}
+      style={{ filter: 'brightness(0) invert(1)' }}
+    />
+  );
+}
+
 export function LogoIcon({ className = "", size = 32 }: IconProps) {
   return (
     <motion.svg
